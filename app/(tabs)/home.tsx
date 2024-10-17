@@ -1,130 +1,136 @@
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
-import React from 'react';
+import React from "react";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { router} from 'expo-router';
 
-const Home = () => {
+export default function Home() {
   return (
-    <ScrollView>
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>BuzzTracker</Text>
+      <View style={styles.headerWrapper}>
+        <Text style={styles.header}>BuzzTracker</Text>
       </View>
 
-      {/* Welcome Text */}
-      <View style={styles.content}>
-        <Text style={styles.welcomeText}>
-          Welcome back, <Text style={styles.nameText}>placeholder name</Text>
-        </Text>
+      <View style={styles.welcomeSection}>
+        <View style={styles.welcomeRow}>
+          <Text style={styles.welcomeText}>Welcome back, ____</Text>
+        </View>
 
-        {/* Dengue Status Section */}
-        <Text style={styles.sectionTitle}>Current Dengue Status:</Text>
-        <View style={styles.dengueStatus}>
-          <Text style={styles.statusText}>Positive</Text>
+        <Text style={styles.statusText}>Current Dengue Status:</Text>
+
+        <View style={styles.statusBox}>
+          <Text style={styles.status}>Positive</Text>
         </View>
         <TouchableOpacity style={styles.viewMoreButton}>
-          <Text style={styles.buttonText}>View More</Text>
+          <Text style={styles.viewMoreText} onPress={() => router.push('/(home)/viewMore')}>View More</Text>
         </TouchableOpacity>
-
-        {/* Report Dengue Section */}
-        <Text style={styles.reportPrompt}>
+      <Text style={styles.reportPrompt}>
           Have dengue? Report it so we can warn others
-        </Text>
-        <TouchableOpacity style={styles.reportButton}>
-          <Text style={styles.reportButtonText}>Report Now</Text>
-        </TouchableOpacity>
+      </Text>
+      
+      <TouchableOpacity style={styles.reportButton} onPress={() => router.push('/(home)/report_form')}>
+        <Text style={styles.reportButtonText}>Report Now</Text>
+      </TouchableOpacity>
+    
+      </View>
 
-        {/* Article Section */}
-        <View style={styles.article}>
-          <Text style={styles.articleText}>Article #2</Text>
-        </View>
+      <View style={styles.articleSection}>
+        <Text style={styles.articleText}>Article #1</Text>
+      </View>
+      <View style={styles.articleSection}>
+        <Text style={styles.articleText}>Article #2</Text>
       </View>
     </View>
-    </ScrollView>
   );
-};
-
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#ffffff",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingTop: 30,
+  },
+  headerWrapper: {
+    width: "100%",
+    borderBottomWidth: 2,
+    borderBottomColor: "#cccccc",
+    alignItems: "center",
+    paddingBottom: 10,
   },
   header: {
-    paddingTop: 50,
-    paddingBottom: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f8f8f8',
-    borderBottomWidth: 1,
-    borderColor: '#ddd',
-  },
-  headerText: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
+    textAlign: "center",
   },
-  content: {
-    flex: 1,
-    paddingTop: 20,
-    paddingHorizontal: 16,
+  welcomeSection: {
+    width: "90%",
+    marginVertical: 20,
+    alignItems: "center",
+  },
+  welcomeRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
   },
   welcomeText: {
-    fontSize: 18, // Base font size for "Welcome Back,"
-  },
-  nameText: {
-    fontSize: 20, // Larger font size for "placeholder name"
-    fontWeight: 'bold', // Optional: make the name bold
-  },
-  sectionTitle: {
-    fontSize: 16,
-    marginBottom: 10,
-    paddingTop: 20,
-  },
-  dengueStatus: {
-    backgroundColor: '#e0e0e0', // Light gray background for status
-    padding: 15,
-    alignItems: 'center',
-    marginBottom: 10,
+    fontSize: 18,
+    textAlign: "left",
+    alignSelf: "flex-start",
   },
   statusText: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 5,
+    textAlign: "center",
+    paddingTop: 10,
+  },
+  statusBox: {
+    width: "80%",
+    paddingVertical: 10,
+    backgroundColor: "#d3d3d3",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  status: {
+    fontSize: 20,
+    fontWeight: "bold",
   },
   viewMoreButton: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#6b3a3a', // Darker color for View More button
     paddingVertical: 5,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  reportPrompt: {
-    marginTop: 20,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  reportButton: {
-    backgroundColor: '#6b3a3a', // Matching Report button color
-    padding: 15,
-    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 20,
+    marginLeft: 150,
+  },
+  viewMoreText: {
+    color: "#ffffff",
+    fontSize: 14,
+  },
+  reportButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 50,
+    backgroundColor: "#7b4b52",
+    borderRadius: 5,
+    marginBottom: 30,
   },
   reportButtonText: {
-    color: '#fff',
+    color: "#ffffff",
     fontSize: 16,
-    fontWeight: 'bold',
   },
-  article: {
-    backgroundColor: '#d3d3d3', // Light gray for article section
-    padding: 20,
-    alignItems: 'center',
+  reportPrompt: {
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  articleSection: {
+    width: "90%",
+    paddingVertical: 20,
+    backgroundColor: "#d3d3d3",
+    alignItems: "center",
     marginBottom: 20,
   },
   articleText: {
     fontSize: 18,
-    fontStyle: 'italic',
   },
 });
-
-export default Home;
