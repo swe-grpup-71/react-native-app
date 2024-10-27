@@ -1,11 +1,12 @@
 import { View, Text, ScrollView, Modal } from "react-native";
 import React, { useCallback, useEffect, useState, useRef } from "react";
-import MapView from "react-native-maps";
+import MapView, { Geojson } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as TaskManager from "expo-task-manager";
 import * as Location from "expo-location";
 import CustomButton from "@/components/CustomButton";
 import { useFocusEffect } from "@react-navigation/native";
+import { CLUSTER_DATASET } from "@/constants/ClusterDataset";
 
 const LOCATION_TASK_NAME = "BACKGROUND_LOCATION_TASK";
 let foregroundSubscription: Location.LocationSubscription | null = null;
@@ -197,7 +198,14 @@ export default function Explore() {
               longitudeDelta: 0.08,
             }}
             showsUserLocation={true}
-          />
+          >
+            <Geojson
+              geojson={CLUSTER_DATASET}
+              strokeColor="#5d3d48"
+              fillColor="#ae9ea4"
+              strokeWidth={2}
+            />
+          </MapView>
         </View>
       </ScrollView>
     </SafeAreaView>
