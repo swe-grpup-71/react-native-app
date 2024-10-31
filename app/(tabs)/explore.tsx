@@ -15,10 +15,9 @@ import * as Location from "expo-location";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
+import { MAPBOX_ACCESS_TOKEN } from "@env";
 
-MapboxGL.setAccessToken(
-  "pk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20ydm9kbm93MGR3YTJpcHoxdTlnamU4biJ9.EJIsQgXua7fhDx5tGyiBhg"
-);
+MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
 let foregroundSubscription: Location.LocationSubscription | null = null;
 
