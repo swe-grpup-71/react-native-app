@@ -16,6 +16,9 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
 import { MAPBOX_ACCESS_TOKEN } from "@env";
+import ActionSheet, { ActionSheetRef } from "react-native-actions-sheet";
+import BackgroundInteraction from "@/components/ActionSheet/BackgroundInteraction";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
 
@@ -33,6 +36,9 @@ export default function Explore() {
   // Create a reference to the MapView
   const mapRef = useRef<MapView>(null);
 
+  // Create a reference to the ActionSheet
+  const actionSheetRef = useRef<ActionSheetRef>(null);
+
   // Buffer the polygons from the CLUSTER_DATASET
   const bufferedDataset = bufferPolygons(CLUSTER_DATASET, 200); // Buffer by 200 meters
 
@@ -41,6 +47,10 @@ export default function Explore() {
       // Start location tracking when page is focused
       console.log("Explore page focused");
       startForegroundUpdate();
+
+      if (actionSheetRef.current) {
+        actionSheetRef.current.show();
+      }
 
       // Stop location tracking when page loses focus
       return () => {
@@ -151,94 +161,78 @@ export default function Explore() {
 
   return (
     <View className="flex-1 m-0 p-0">
-      <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View className="flex-1 items-center justify-center bg-black bg-opacity-50">
-          <View className="bg-white p-5 rounded-lg w-4/5">
-            <Text className="mb-5 text-center">
-              To provide location-based features, we need permission to access
-              your location at all times, even when you're not using the app.
-              Please allow 'Always' for the feature to work.
-            </Text>
-            <CustomButton title="OK" handlePress={requestPermissions} />
+      <GestureHandlerRootView>
+        <Modal visible={modalVisible} transparent={true} animationType="slide">
+          <View className="flex-1 items-center justify-center bg-black bg-opacity-50">
+            <View className="bg-white p-5 rounded-lg w-4/5">
+              <Text className="mb-5 text-center">
+                To provide location-based features, we need permission to access
+                your location at all times, even when you're not using the app.
+                Please allow 'Always' for the feature to work.
+              </Text>
+              <CustomButton title="OK" handlePress={requestPermissions} />
+            </View>
           </View>
-        </View>
-      </Modal>
-      <View className="flex-1 items-center justify-center m-0 p-0">
-        <MapboxGL.MapView
-          // ref={mapRef} // Attach the ref to the MapView
-          className="w-full h-full"
-          styleURL={MapboxGL.StyleURL.Light}
-        >
-          {position && enableZoom && (
-            <MapboxGL.Camera
-              zoomLevel={14}
-              centerCoordinate={[position.longitude, position.latitude]}
-              animationDuration={2000}
-            />
-          )}
-          <MapboxGL.ShapeSource id="bufferedDataset" shape={bufferedDataset}>
-            <MapboxGL.FillLayer
-              id="bufferedFill"
-              style={{
-                fillColor: "#ae9ea4",
-                fillOpacity: 0.3,
-              }}
-            />
-            <MapboxGL.LineLayer
-              id="bufferedOutline"
-              style={{
-                lineColor: "#9e8b91", // Same color as the fill or a contrasting one
-                lineWidth: 2, // Thickness of the outline
-              }}
-            />
-          </MapboxGL.ShapeSource>
-
-          <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
-            <MapboxGL.FillLayer
-              id="clusterFill"
-              style={{
-                // fillColor: "#ae9ea4",
-                // fillOutlineColor: "#5d3d48",
-                fillColor: "#5d3d48",
-
-                fillOpacity: 0.3,
-              }}
-            />
-            <MapboxGL.LineLayer
-              id="clusterOutline"
-              style={{
-                lineColor: "#2f1f24", // Same color as the fill or a contrasting one
-                lineWidth: 2, // Thickness of the outline
-              }}
-            />
-          </MapboxGL.ShapeSource>
-          <MapboxGL.UserLocation />
-        </MapboxGL.MapView>
-        <View className="absolute bottom-[4vh] items-center">
-          <TouchableOpacity
-            className={`px-4 py-2 rounded-lg ${
-              isGeofencingEnabled ? "bg-primary" : "bg-white"
-            }`}
-            onPress={toggleGeofencing}
+        </Modal>
+        <View className="flex-1 items-center justify-center m-0 p-0">
+          <MapboxGL.MapView
+            // ref={mapRef} // Attach the ref to the MapView
+            className="w-full h-full"
+            styleURL={MapboxGL.StyleURL.Light}
           >
-            <Text
-              className={`font-semibold ${
-                isGeofencingEnabled ? "text-white" : ""
-              }`}
-            >
-              {isGeofencingEnabled ? "Disable geofencing" : "Enable geofencing"}
-            </Text>
-          </TouchableOpacity>
+            {position && enableZoom && (
+              <MapboxGL.Camera
+                zoomLevel={14}
+                centerCoordinate={[position.longitude, position.latitude]}
+                animationDuration={2000}
+              />
+            )}
+            <MapboxGL.ShapeSource id="bufferedDataset" shape={bufferedDataset}>
+              <MapboxGL.FillLayer
+                id="bufferedFill"
+                style={{
+                  fillColor: "#ae9ea4",
+                  fillOpacity: 0.3,
+                }}
+              />
+              <MapboxGL.LineLayer
+                id="bufferedOutline"
+                style={{
+                  lineColor: "#9e8b91", // Same color as the fill or a contrasting one
+                  lineWidth: 2, // Thickness of the outline
+                }}
+              />
+            </MapboxGL.ShapeSource>
+
+            <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
+              <MapboxGL.FillLayer
+                id="clusterFill"
+                style={{
+                  // fillColor: "#ae9ea4",
+                  // fillOutlineColor: "#5d3d48",
+                  fillColor: "#5d3d48",
+
+                  fillOpacity: 0.3,
+                }}
+              />
+              <MapboxGL.LineLayer
+                id="clusterOutline"
+                style={{
+                  lineColor: "#2f1f24", // Same color as the fill or a contrasting one
+                  lineWidth: 2, // Thickness of the outline
+                }}
+              />
+            </MapboxGL.ShapeSource>
+            <MapboxGL.UserLocation />
+          </MapboxGL.MapView>
         </View>
-        <View className="absolute bottom-[4vh] right-[4vh] items-center">
-          <TouchableOpacity
-            className="bg-white rounded-lg p-1"
-            onPress={focusOnUserLocation}
-          >
-            <FontAwesome6 name="location-crosshairs" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-      </View>
+        <BackgroundInteraction
+          actionSheetRef={actionSheetRef}
+          isGeofencingEnabled={isGeofencingEnabled}
+          toggleGeofencing={toggleGeofencing}
+          focusOnUserLocation={focusOnUserLocation}
+        />
+      </GestureHandlerRootView>
     </View>
   );
 }
