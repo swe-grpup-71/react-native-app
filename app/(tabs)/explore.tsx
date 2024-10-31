@@ -15,9 +15,9 @@ import * as Location from "expo-location";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
-import { MAPBOX_ACCESS_TOKEN } from "@env";
 
-MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
+const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
+MapboxGL.setAccessToken(token);
 
 let foregroundSubscription: Location.LocationSubscription | null = null;
 
