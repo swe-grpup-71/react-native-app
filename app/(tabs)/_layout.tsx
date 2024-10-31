@@ -6,7 +6,12 @@ import React from "react";
 
 export default function TabLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "blue" }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: "white",
+        tabBarStyle: { backgroundColor: "#5d3d48" },
+      }}
+    >
       <Tabs.Screen
         name="(home)"
         options={{
