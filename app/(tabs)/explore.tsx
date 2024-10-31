@@ -1,12 +1,24 @@
-import { View, Text, ScrollView, Modal } from "react-native";
-import React, { useCallback, useEffect, useState, useRef } from "react";
-import MapView, { Geojson } from "react-native-maps";
-import { SafeAreaView } from "react-native-safe-area-context";
-import * as TaskManager from "expo-task-manager";
-import * as Location from "expo-location";
 import CustomButton from "@/components/CustomButton";
-import { useFocusEffect } from "@react-navigation/native";
 import { CLUSTER_DATASET } from "@/constants/ClusterDataset";
+import { bufferPolygons } from "@/utils/bufferPolygons";
+import {
+  defineGeofencingTask,
+  startGeofencing,
+  stopGeofencing,
+} from "@/utils/geofencing";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import { useFocusEffect } from "@react-navigation/native";
+import MapboxGL from "@rnmapbox/maps";
+import Constants from "expo-constants";
+import * as Location from "expo-location";
+import * as TaskManager from "expo-task-manager";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Modal, Text, TouchableOpacity, View } from "react-native";
+import MapView from "react-native-maps";
+
+MapboxGL.setAccessToken(
+  "pk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20ydm9kbm93MGR3YTJpcHoxdTlnamU4biJ9.EJIsQgXua7fhDx5tGyiBhg"
+);
 
 const LOCATION_TASK_NAME = "BACKGROUND_LOCATION_TASK";
 let foregroundSubscription: Location.LocationSubscription | null = null;
@@ -41,10 +53,15 @@ export default function Explore() {
   const [position, setPosition] =
     useState<Location.LocationObjectCoords | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
-  const [isFirstLoad, setIsFirstLoad] = useState<boolean>(true);
+  const [enableZoom, setEnableZoom] = useState<boolean>(true);
+  const [isGeofencingEnabled, setIsGeofencingEnabled] =
+    useState<boolean>(false);
 
   // Create a reference to the MapView
   const mapRef = useRef<MapView>(null);
+
+  // Buffer the polygons from the CLUSTER_DATASET
+  const bufferedDataset = bufferPolygons(CLUSTER_DATASET, 200); // Buffer by 200 meters
 
   useFocusEffect(
     useCallback(() => {
@@ -55,21 +72,21 @@ export default function Explore() {
       // Stop location tracking when page loses focus
       return () => {
         stopForegroundUpdate();
-        setIsFirstLoad(true);
+        setEnableZoom(true);
       };
     }, [])
   );
 
   useEffect(
     useCallback(() => {
-      if (mapRef.current && isFirstLoad && position) {
+      if (mapRef.current && enableZoom && position) {
         mapRef.current.animateToRegion({
           latitude: position.latitude,
           longitude: position.longitude,
           latitudeDelta: 0.01, // Adjust the zoom level as needed
           longitudeDelta: 0.01, // Adjust the zoom level as needed
         });
-        setIsFirstLoad(false);
+        setEnableZoom(false);
       }
     }, [position])
   );
@@ -110,7 +127,7 @@ export default function Explore() {
         accuracy: Location.Accuracy.BestForNavigation,
       },
       (location) => {
-        console.log(location);
+        // console.log(location);
         setPosition(location.coords);
       }
     );
@@ -172,42 +189,120 @@ export default function Explore() {
     }
   };
 
+  const toggleGeofencing = async () => {
+    if (isGeofencingEnabled) {
+      console.log("Disabling geofencing");
+      await stopGeofencing();
+      console.log("Geofencing stopped");
+    } else {
+      console.log("Enabling geofencing");
+      defineGeofencingTask();
+      await startGeofencing();
+      console.log("Geofencing started");
+    }
+    setIsGeofencingEnabled(!isGeofencingEnabled);
+  };
+
+  // Function to focus on the user's location
+  const focusOnUserLocation = () => {
+    if (position) {
+      setEnableZoom(true);
+      setTimeout(() => {
+        setEnableZoom(false);
+      }, 2000);
+    }
+  };
+
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <Modal visible={modalVisible} transparent={true} animationType="slide">
-          <View className="flex-1 items-center justify-center bg-black bg-opacity-50">
-            <View className="bg-white p-5 rounded-lg w-4/5">
-              <Text className="mb-5 text-center">
-                To provide location-based features, we need permission to access
-                your location at all times, even when you're not using the app.
-                Please allow 'Always' for the feature to work.
-              </Text>
-              <CustomButton title="OK" handlePress={requestPermissions} />
-            </View>
+    <View className="flex-1 m-0 p-0">
+      <Modal visible={modalVisible} transparent={true} animationType="slide">
+        <View className="flex-1 items-center justify-center bg-black bg-opacity-50">
+          <View className="bg-white p-5 rounded-lg w-4/5">
+            <Text className="mb-5 text-center">
+              To provide location-based features, we need permission to access
+              your location at all times, even when you're not using the app.
+              Please allow 'Always' for the feature to work.
+            </Text>
+            <CustomButton title="OK" handlePress={requestPermissions} />
           </View>
-        </Modal>
-        <View className="flex-1 items-center justify-center">
-          <MapView
-            ref={mapRef} // Attach the ref to the MapView
-            className="w-full h-[25vh]"
-            initialRegion={{
-              latitude: 1.3521,
-              longitude: 103.8198,
-              latitudeDelta: 0.18,
-              longitudeDelta: 0.08,
-            }}
-            showsUserLocation={true}
-          >
-            <Geojson
-              geojson={CLUSTER_DATASET}
-              strokeColor="#5d3d48"
-              fillColor="#ae9ea4"
-              strokeWidth={2}
-            />
-          </MapView>
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </Modal>
+      <View className="flex-1 items-center justify-center m-0 p-0">
+        <MapboxGL.MapView
+          // ref={mapRef} // Attach the ref to the MapView
+          className="w-full h-full"
+          styleURL={MapboxGL.StyleURL.Light}
+        >
+          {position && enableZoom && (
+            <MapboxGL.Camera
+              zoomLevel={14}
+              centerCoordinate={[position.longitude, position.latitude]}
+              animationDuration={2000}
+            />
+          )}
+          <MapboxGL.ShapeSource id="bufferedDataset" shape={bufferedDataset}>
+            <MapboxGL.FillLayer
+              id="bufferedFill"
+              style={{
+                fillColor: "#ae9ea4",
+                fillOpacity: 0.3,
+              }}
+            />
+            <MapboxGL.LineLayer
+              id="bufferedOutline"
+              style={{
+                lineColor: "#9e8b91", // Same color as the fill or a contrasting one
+                lineWidth: 2, // Thickness of the outline
+              }}
+            />
+          </MapboxGL.ShapeSource>
+
+          <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
+            <MapboxGL.FillLayer
+              id="clusterFill"
+              style={{
+                // fillColor: "#ae9ea4",
+                // fillOutlineColor: "#5d3d48",
+                fillColor: "#5d3d48",
+
+                fillOpacity: 0.3,
+              }}
+            />
+            <MapboxGL.LineLayer
+              id="clusterOutline"
+              style={{
+                lineColor: "#2f1f24", // Same color as the fill or a contrasting one
+                lineWidth: 2, // Thickness of the outline
+              }}
+            />
+          </MapboxGL.ShapeSource>
+          <MapboxGL.UserLocation />
+        </MapboxGL.MapView>
+        <View className="absolute bottom-[4vh] items-center">
+          <TouchableOpacity
+            className={`px-4 py-2 rounded-lg ${
+              isGeofencingEnabled ? "bg-primary" : "bg-white"
+            }`}
+            onPress={toggleGeofencing}
+          >
+            <Text
+              className={`font-semibold ${
+                isGeofencingEnabled ? "text-white" : ""
+              }`}
+            >
+              {isGeofencingEnabled ? "Disable geofencing" : "Enable geofencing"}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View className="absolute bottom-[4vh] right-[4vh] items-center">
+          <TouchableOpacity
+            className="bg-white rounded-lg p-1"
+            onPress={focusOnUserLocation}
+          >
+            <FontAwesome6 name="location-crosshairs" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 }

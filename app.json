@@ -19,9 +19,13 @@
         "fetch"
       ],
       "infoPlist": {
-        "UIBackgroundModes": ["location", "fetch", "remote-notification"],
+        "UIBackgroundModes": [
+          "location",
+          "fetch",
+          "remote-notification"
+        ],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "This app requires access to your location even when closed.",
-        "NSLocationWhenInUseUsageDescription": "We need your location to provide location-based services.",
+        "NSLocationWhenInUseUsageDescription": "We need your location to provide location-based services."
       }
     },
     "android": {
@@ -30,8 +34,14 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-	      "ACCESS_BACKGROUND_LOCATION"
-	    ]
+        "ACCESS_BACKGROUND_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
+      ],
+      "package": "com.anonymous.myapp"
     },
     "web": {
       "bundler": "metro",
@@ -46,6 +56,12 @@
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location.",
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20ydzBxcHc0MDFzcjJ2c2dybWZhdW5laSJ9.eXmTKILSfplwumwQZ6lE1g"
         }
       ]
     ],
