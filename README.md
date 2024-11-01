@@ -10,18 +10,54 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Set up environment variables
+
+   To configure your app to use Mapbox, you’ll need a `.env` file in the root directory. Follow these steps:
+
+   - Create a `.env` file in the project root.
+   - Add your Mapbox access token to the `.env` file like this:
+
+     ```plaintext
+     EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN="your_mapbox_access_token_here"
+     ```
+
+   If you don’t have an access token, you can get one by creating an account at [Mapbox](https://www.mapbox.com/).
+
+3. Start the app
+
+   **Option 1:** Run directly on your device without Expo Go app (recommended):
+
+   1. **Connect your device via USB cable**:
+
+      - Plug your Android or iOS device into your development computer using a USB cable.
+
+   2. **Enable Developer Mode**:
+
+      - **Android**: Go to **Settings > About phone** and tap on **Build number** 7 times to enable Developer Options.
+      - **iOS**: Connect your device to your computer and open **Xcode**. Under **Devices and Simulators**, select your device and enable **Developer Mode**.
+
+   3. **Enable USB Debugging**:
+
+      - **Android**: Go to **Settings > Developer options** and enable **USB debugging**.
+      - **iOS**: No additional debugging setup is required, but you may need to trust your computer on the device.
+
+   4. **Run the app on your device**:
+      - For Android:
+        ```bash
+        npx expo run:android -d
+        ```
+      - For iOS:
+        ```bash
+        npx expo run:ios -d
+        ```
+
+   **Option 2:** (Deprecated) Alternatively, you can use the following command to start the project, although this method may have limited functionality for your project.
+
+   Note: React Native Mapbox Maps cannot be used with Expo Go as it requires native code.
 
    ```bash
-    npx expo start
+   npx expo start
    ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
 You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
 
@@ -46,5 +82,5 @@ To learn more about developing your project with Expo, look at the following res
 
 Join our community of developers creating universal apps.
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
+- [Expo on GitHub](https://github.com/expo/expo): View our open-source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
