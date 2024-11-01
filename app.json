@@ -56,12 +56,6 @@
           "isIosBackgroundLocationEnabled": true,
           "isAndroidBackgroundLocationEnabled": true
         }
-      ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20ydzBxcHc0MDFzcjJ2c2dybWZhdW5laSJ9.eXmTKILSfplwumwQZ6lE1g"
-        }
       ]
     ],
     "experiments": {
