@@ -63,13 +63,7 @@ export default function Explore() {
 
   useEffect(
     useCallback(() => {
-      if (mapRef.current && enableZoom && position) {
-        mapRef.current.animateToRegion({
-          latitude: position.latitude,
-          longitude: position.longitude,
-          latitudeDelta: 0.01, // Adjust the zoom level as needed
-          longitudeDelta: 0.01, // Adjust the zoom level as needed
-        });
+      if (enableZoom && position) {
         setEnableZoom(false);
       }
     }, [position])
