@@ -15,12 +15,12 @@ import * as Location from "expo-location";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Text, TouchableOpacity, View } from "react-native";
 import MapView from "react-native-maps";
-import { MAPBOX_ACCESS_TOKEN } from "@env";
 import ActionSheet, { ActionSheetRef } from "react-native-actions-sheet";
 import BackgroundInteraction from "@/components/ActionSheet/BackgroundInteraction";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-MapboxGL.setAccessToken(MAPBOX_ACCESS_TOKEN);
+const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
+MapboxGL.setAccessToken(token);
 
 let foregroundSubscription: Location.LocationSubscription | null = null;
 
