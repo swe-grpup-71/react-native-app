@@ -16,7 +16,7 @@ export default function Index() {
           </View>
           <CustomButton
             title="Let's go!"
-            handlePress={() => router.push("/sign-in")}
+            handlePress={() => router.push("./app")}
             containerStyles="w-full mt-7"
           />
         </View>

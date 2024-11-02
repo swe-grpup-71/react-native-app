@@ -13,6 +13,6 @@ export default {
           RNMapboxMapsDownloadToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
         }
       ]
-    ],
+    ]
   },
 };

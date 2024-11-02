@@ -12,7 +12,6 @@ web-build/
 android/
 .env
 react-native-app-f3e83-firebase-adminsdk-ihg2n-4dc54a5060.json
-google-services.json
 
 # macOS
 .DS_Store

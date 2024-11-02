@@ -1,0 +1,30 @@
+{
+  "cli": {
+    "version": ">= 12.6.2",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN":"sk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20yeG16MmI5MDZiNzJpcjRjOGIyODN2NiJ9.05zSroV4XUBL8TprXbQQtg"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN":"sk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20yeG16MmI5MDZiNzJpcjRjOGIyODN2NiJ9.05zSroV4XUBL8TprXbQQtg"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN":"sk.eyJ1IjoiY2hvbzAxOTUiLCJhIjoiY20yeG16MmI5MDZiNzJpcjRjOGIyODN2NiJ9.05zSroV4XUBL8TprXbQQtg"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
