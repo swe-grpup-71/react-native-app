@@ -29,6 +29,7 @@ export default function Explore() {
   const [enableZoom, setEnableZoom] = useState<boolean>(true);
   const [isGeofencingEnabled, setIsGeofencingEnabled] =
     useState<boolean>(false);
+  const [foregroundEnabled, setForegroundEnabled] = useState(false);
 
   // Create a reference to the MapView
   const mapRef = useRef<MapView>(null);
@@ -41,23 +42,13 @@ export default function Explore() {
       // Start location tracking when page is focused
       console.log("Explore page focused");
       startForegroundUpdate();
+      checkGeofencing();
 
       // Stop location tracking when page loses focus
       return () => {
         stopForegroundUpdate();
         setEnableZoom(true);
       };
-    }, [])
-  );
-
-  useFocusEffect(
-    useCallback(() => {
-      const checkGeofencing = async () => {
-        const enabled = await geofenceEnabled();
-        console.log("Geofencing enabled?", enabled);
-        setIsGeofencingEnabled(enabled);
-      };
-      checkGeofencing();
     }, [])
   );
 
@@ -68,6 +59,19 @@ export default function Explore() {
       }
     }, [position])
   );
+
+  const checkGeofencing = async () => {
+    const { granted } = await Location.getBackgroundPermissionsAsync();
+    if (!granted) {
+      console.log(
+        "Background location permissions not allowed, enabled to check geofencing status."
+      );
+      return;
+    }
+    const enabled = await geofenceEnabled();
+    console.log("Geofencing enabled?", enabled);
+    setIsGeofencingEnabled(enabled);
+  };
 
   const requestPermissions = async () => {
     try {
@@ -82,6 +86,7 @@ export default function Explore() {
     }
     setModalVisible(false);
     startForegroundUpdate();
+    checkGeofencing();
   };
 
   // Start location tracking in foreground
@@ -93,6 +98,8 @@ export default function Explore() {
       console.log("location tracking denied");
       setModalVisible(true);
       return;
+    } else {
+      setForegroundEnabled(true);
     }
 
     // Make sure that foreground location tracking is not running
@@ -146,7 +153,7 @@ export default function Explore() {
   return (
     <View className="flex-1 m-0 p-0">
       <Modal visible={modalVisible} transparent={true} animationType="slide">
-        <View className="flex-1 items-center justify-center bg-black bg-opacity-50">
+        <View className="flex-1 items-center justify-center bg-black/50">
           <View className="bg-white p-5 rounded-lg w-4/5">
             <Text className="mb-5 text-center">
               To provide location-based features, we need permission to access
@@ -157,82 +164,90 @@ export default function Explore() {
           </View>
         </View>
       </Modal>
-      <View className="flex-1 items-center justify-center m-0 p-0">
-        <MapboxGL.MapView
-          // ref={mapRef} // Attach the ref to the MapView
-          className="w-full h-full"
-          styleURL={MapboxGL.StyleURL.Light}
-        >
-          {position && enableZoom && (
-            <MapboxGL.Camera
-              zoomLevel={14}
-              centerCoordinate={[position.longitude, position.latitude]}
-              animationDuration={2000}
-            />
-          )}
-          <MapboxGL.ShapeSource id="bufferedDataset" shape={bufferedDataset}>
-            <MapboxGL.FillLayer
-              id="bufferedFill"
-              style={{
-                fillColor: "#ae9ea4",
-                fillOpacity: 0.3,
-              }}
-            />
-            <MapboxGL.LineLayer
-              id="bufferedOutline"
-              style={{
-                lineColor: "#9e8b91", // Same color as the fill or a contrasting one
-                lineWidth: 2, // Thickness of the outline
-              }}
-            />
-          </MapboxGL.ShapeSource>
-
-          <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
-            <MapboxGL.FillLayer
-              id="clusterFill"
-              style={{
-                // fillColor: "#ae9ea4",
-                // fillOutlineColor: "#5d3d48",
-                fillColor: "#5d3d48",
-
-                fillOpacity: 0.3,
-              }}
-            />
-            <MapboxGL.LineLayer
-              id="clusterOutline"
-              style={{
-                lineColor: "#2f1f24", // Same color as the fill or a contrasting one
-                lineWidth: 2, // Thickness of the outline
-              }}
-            />
-          </MapboxGL.ShapeSource>
-          <MapboxGL.UserLocation />
-        </MapboxGL.MapView>
-        <View className="absolute bottom-[4vh] items-center">
-          <TouchableOpacity
-            className={`px-4 py-2 rounded-lg ${
-              isGeofencingEnabled ? "bg-primary" : "bg-white"
-            }`}
-            onPress={toggleGeofencing}
+      {foregroundEnabled && (
+        <View className="flex-1 items-center justify-center m-0 p-0">
+          <MapboxGL.MapView
+            // ref={mapRef} // Attach the ref to the MapView
+            className="w-full h-full"
+            styleURL={MapboxGL.StyleURL.Light}
           >
-            <Text
-              className={`font-semibold ${
-                isGeofencingEnabled ? "text-white" : ""
+            {position && enableZoom && (
+              <MapboxGL.Camera
+                zoomLevel={14}
+                centerCoordinate={[position.longitude, position.latitude]}
+                animationDuration={2000}
+              />
+            )}
+            <MapboxGL.ShapeSource id="bufferedDataset" shape={bufferedDataset}>
+              <MapboxGL.FillLayer
+                id="bufferedFill"
+                style={{
+                  fillColor: "#ae9ea4",
+                  fillOpacity: 0.3,
+                }}
+              />
+              <MapboxGL.LineLayer
+                id="bufferedOutline"
+                style={{
+                  lineColor: "#9e8b91", // Same color as the fill or a contrasting one
+                  lineWidth: 2, // Thickness of the outline
+                }}
+              />
+            </MapboxGL.ShapeSource>
+
+            <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
+              <MapboxGL.FillLayer
+                id="clusterFill"
+                style={{
+                  // fillColor: "#ae9ea4",
+                  // fillOutlineColor: "#5d3d48",
+                  fillColor: "#5d3d48",
+
+                  fillOpacity: 0.3,
+                }}
+              />
+              <MapboxGL.LineLayer
+                id="clusterOutline"
+                style={{
+                  lineColor: "#2f1f24", // Same color as the fill or a contrasting one
+                  lineWidth: 2, // Thickness of the outline
+                }}
+              />
+            </MapboxGL.ShapeSource>
+            <MapboxGL.UserLocation />
+          </MapboxGL.MapView>
+          <View className="absolute bottom-[4vh] items-center">
+            <TouchableOpacity
+              className={`px-4 py-2 rounded-lg ${
+                isGeofencingEnabled ? "bg-primary" : "bg-white"
               }`}
+              onPress={toggleGeofencing}
             >
-              {isGeofencingEnabled ? "Disable geofencing" : "Enable geofencing"}
-            </Text>
-          </TouchableOpacity>
+              <Text
+                className={`font-semibold ${
+                  isGeofencingEnabled ? "text-white" : ""
+                }`}
+              >
+                {isGeofencingEnabled
+                  ? "Disable geofencing"
+                  : "Enable geofencing"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View className="absolute bottom-[4vh] right-[4vh] items-center">
+            <TouchableOpacity
+              className="bg-white rounded-lg p-1"
+              onPress={focusOnUserLocation}
+            >
+              <FontAwesome6
+                name="location-crosshairs"
+                size={24}
+                color="black"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View className="absolute bottom-[4vh] right-[4vh] items-center">
-          <TouchableOpacity
-            className="bg-white rounded-lg p-1"
-            onPress={focusOnUserLocation}
-          >
-            <FontAwesome6 name="location-crosshairs" size={24} color="black" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      )}
     </View>
   );
 }
