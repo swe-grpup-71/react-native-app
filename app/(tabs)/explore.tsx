@@ -13,8 +13,16 @@ import { useFocusEffect } from "@react-navigation/native";
 import MapboxGL from "@rnmapbox/maps";
 import * as Location from "expo-location";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { Modal, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Linking,
+  Modal,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import MapView from "react-native-maps";
+import * as Notifications from "expo-notifications";
 
 const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
 MapboxGL.setAccessToken(token);
@@ -125,6 +133,32 @@ export default function Explore() {
     setPosition(null);
   };
 
+  const requestNotificationsPermissions = async (
+    settings: Notifications.NotificationPermissionsStatus
+  ) => {
+    if (settings.status === "undetermined") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Notifications permissions not granted");
+      }
+    } else if (settings.status === "denied") {
+      Alert.alert(
+        "Notifications Disabled",
+        "To receive updates, please enable notifications in your settings.",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Go to Settings", onPress: openSettings },
+        ]
+      );
+    }
+  };
+
+  const openSettings = () => {
+    Linking.openSettings().catch(() => {
+      Alert.alert("Unable to open settings");
+    });
+  };
+
   const toggleGeofencing = async () => {
     if (isGeofencingEnabled) {
       console.log("Disabling geofencing");
@@ -132,10 +166,20 @@ export default function Explore() {
       await stopGeofencing();
       console.log("Geofencing stopped");
     } else {
-      console.log("Enabling geofencing");
-      await startBackgroundUpdate();
-      await startGeofencing();
-      console.log("Geofencing started");
+      const settings = await Notifications.getPermissionsAsync();
+      if (
+        settings.granted ||
+        settings.ios?.status ===
+          Notifications.IosAuthorizationStatus.PROVISIONAL
+      ) {
+        console.log("Enabling geofencing");
+        await startBackgroundUpdate();
+        await startGeofencing();
+        console.log("Geofencing started");
+      } else {
+        requestNotificationsPermissions(settings);
+        return;
+      }
     }
     setIsGeofencingEnabled(!isGeofencingEnabled);
   };
@@ -155,10 +199,29 @@ export default function Explore() {
       <Modal visible={modalVisible} transparent={true} animationType="slide">
         <View className="flex-1 items-center justify-center bg-black/50">
           <View className="bg-white p-5 rounded-lg w-4/5">
-            <Text className="mb-5 text-center">
+            {/* <Text className="mb-5 text-center">
               To provide location-based features, we need permission to access
               your location at all times, even when you're not using the app.
               Please allow 'Always' for the feature to work.
+            </Text> */}
+            <Text className="text-lg font-bold mb-2">
+              Enable Location & Notifications for Dengue Alerts
+            </Text>
+            <Text className="mb-2 text-justify font-semibold">
+              To keep you safe and provide timely alerts about dengue clusters,
+              please enable the following:
+            </Text>
+            <Text className="mb-2 px-2 text-justify">
+              <Text className="font-semibold">Android:</Text> Go to Settings{" "}
+              {">"} Location {">"} App permissions and set to "Allow all the
+              time." Also, go to Settings {">"} Apps {">"} Your App {">"}{" "}
+              Notifications and ensure they are enabled.
+            </Text>
+            <Text className="mb-5 px-2 text-justify">
+              <Text className="font-semibold">IOS:</Text> Go to Settings {">"}{" "}
+              Privacy {">"} Location Services {">"} Your App and select
+              "Always." Also, go to Settings {">"} Notifications {">"} Your App
+              and ensure notifications are enabled.
             </Text>
             <CustomButton title="OK" handlePress={requestPermissions} />
           </View>

@@ -4,91 +4,92 @@ import { bufferPolygons } from '@/utils/bufferPolygons'; // Adjust the import pa
 import * as turf from '@turf/turf';
 import * as Location from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
+import * as Notifications from'expo-notifications';
 
 const GEOFENCE_TASK_NAME = 'GEOFENCE_TASK';
 const LOCATION_TASK_NAME = "BACKGROUND_LOCATION_TASK";
 
 // Define the background task for location tracking
-  const defineBackgroundLocationTask = () => {
-    TaskManager.defineTask(
-      LOCATION_TASK_NAME,
-      async ({
-        data,
-        error,
-      }: {
-        data?: { locations: Location.LocationObject[] };
-        error?: TaskManager.TaskManagerError | null;
-      }) => {
-        if (error) {
-          console.error(error);
-          return;
-        }
-        if (data) {
-          // Extract location coordinates from data
-          const { locations } = data;
-          const location = locations[0];
-          if (location) {
-            console.log("Location in background", location.coords);
-          }
+const defineBackgroundLocationTask = () => {
+  TaskManager.defineTask(
+    LOCATION_TASK_NAME,
+    async ({
+      data,
+      error,
+    }: {
+      data?: { locations: Location.LocationObject[] };
+      error?: TaskManager.TaskManagerError | null;
+    }) => {
+      if (error) {
+        console.error(error);
+        return;
+      }
+      if (data) {
+        // Extract location coordinates from data
+        const { locations } = data;
+        const location = locations[0];
+        if (location) {
+          console.log("Location in background", location.coords);
         }
       }
-    );
-    
+    }
+  );
+  
+}
+
+// Start location tracking in background
+export const startBackgroundUpdate = async () => {
+  defineBackgroundLocationTask();
+  // Don't track position if permission is not granted
+  const { granted } = await Location.getBackgroundPermissionsAsync();
+  if (!granted) {
+    console.log("location tracking denied");
+    return;
   }
 
-  // Start location tracking in background
-  export const startBackgroundUpdate = async () => {
-    defineBackgroundLocationTask();
-    // Don't track position if permission is not granted
-    const { granted } = await Location.getBackgroundPermissionsAsync();
-    if (!granted) {
-      console.log("location tracking denied");
-      return;
-    }
+  // Make sure the task is defined otherwise do not start tracking
+  const isTaskDefined = await TaskManager.isTaskDefined(LOCATION_TASK_NAME);
+  if (!isTaskDefined) {
+    console.log("Task is not defined");
+    return;
+  }
 
-    // Make sure the task is defined otherwise do not start tracking
-    const isTaskDefined = await TaskManager.isTaskDefined(LOCATION_TASK_NAME);
-    if (!isTaskDefined) {
-      console.log("Task is not defined");
-      return;
-    }
+  // Don't track if it is already running in background
+  const hasStarted = await Location.hasStartedLocationUpdatesAsync(
+    LOCATION_TASK_NAME
+  );
+  if (hasStarted) {
+    console.log("Already started");
+    return;
+  }
 
-    // Don't track if it is already running in background
-    const hasStarted = await Location.hasStartedLocationUpdatesAsync(
-      LOCATION_TASK_NAME
-    );
-    if (hasStarted) {
-      console.log("Already started");
-      return;
-    }
+  await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
+    // For better logs, we set the accuracy to the most sensitive option
+    accuracy: Location.Accuracy.BestForNavigation,
+    // Make sure to enable this notification if you want to consistently track in the background
+    // showsBackgroundLocationIndicator: true,
+    // foregroundService: {
+    //   notificationTitle: "Location",
+    //   notificationBody: "Location tracking in background",
+    //   notificationColor: "#fff",
+    // },
+  });
+  const started = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
+  console.log("Background location started?", started);
+  const taskRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
+  console.log("Background location task registered?", taskRegistered);
+};
 
-    await Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, {
-      // For better logs, we set the accuracy to the most sensitive option
-      accuracy: Location.Accuracy.BestForNavigation,
-      // Make sure to enable this notification if you want to consistently track in the background
-      // showsBackgroundLocationIndicator: true,
-      // foregroundService: {
-      //   notificationTitle: "Location",
-      //   notificationBody: "Location tracking in background",
-      //   notificationColor: "#fff",
-      // },
-    });
-    const started = await Location.hasStartedLocationUpdatesAsync(LOCATION_TASK_NAME)
-    console.log("Background location started?", started);
-    const taskRegistered = await TaskManager.isTaskRegisteredAsync(LOCATION_TASK_NAME);
-    console.log("Background location task registered?", taskRegistered);
-  };
-
-  // Stop location tracking in background
-  export const stopBackgroundUpdate = async () => {
-    const hasStarted = await Location.hasStartedLocationUpdatesAsync(
-      LOCATION_TASK_NAME
-    );
-    if (hasStarted) {
-      await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
-      console.log("Background location tracking stopped");
-    }
-  };
+// Stop location tracking in background
+export const stopBackgroundUpdate = async () => {
+  const hasStarted = await Location.hasStartedLocationUpdatesAsync(
+    LOCATION_TASK_NAME
+  );
+  if (hasStarted) {
+    await Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+    console.log("Background location tracking stopped");
+  }
+};
 
 const defineGeofencingTask = () => {
   TaskManager.defineTask(GEOFENCE_TASK_NAME, ({ data, error }) => {
@@ -104,6 +105,7 @@ const defineGeofencingTask = () => {
       };
       if (eventType === Location.GeofencingEventType.Enter) {
         console.log(`You've entered region: ${region.identifier}, Long: ${region.longitude} Lat: ${region.latitude}`);
+        sendNotification();
       } 
       /*else if (eventType === Location.GeofencingEventType.Exit) {
         console.log(`You've left region: ${region.identifier}`);
@@ -112,13 +114,33 @@ const defineGeofencingTask = () => {
   });
 };
 
+const sendNotification = async () => {
+  const settings = await Notifications.getPermissionsAsync();
+  if (settings.granted || settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  ) {
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "🚨 Dengue Alert!",
+        body: 'You’re in a dengue cluster zone. Please take precautions: wear long sleeves, use repellent, and avoid standing water. Stay safe!',
+        // data: { data: 'goes here' },
+      },
+      trigger: { seconds: 2 }, // Schedule to trigger in 2 seconds
+    });
+  }
+}
+
 export const startGeofencing = async () => {
   defineGeofencingTask();
-    console.log('Requesting background location permissions');
+  console.log('Requesting background location permissions');
   const { granted } = await Location.requestBackgroundPermissionsAsync();
   if (!granted) {
     console.log('Background location permission not granted');
     return;
+  }
+  
+  const { status } = await Notifications.requestPermissionsAsync();
+  if (status !== "granted") {
+    console.log("Notifications permissions not granted");
   }
 
   const isTaskDefined = await TaskManager.isTaskDefined(GEOFENCE_TASK_NAME);
