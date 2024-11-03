@@ -1,12 +1,17 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, {useState} from "react";
+import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image, Animated   } from "react-native";
 import { router} from 'expo-router';
 
 export default function Home() {
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalVisible2, setModalVisible2] = useState(false);
+
   return (
     <View style={styles.container}>
       <View style={styles.headerWrapper}>
         <Text style={styles.header}>BuzzTracker</Text>
+        <Image source={require('../../../assets/images/icon.png')} style={styles.headerImage} />
       </View>
 
       <View style={styles.welcomeSection}>
@@ -34,10 +39,59 @@ export default function Home() {
 
       <View style={styles.articleSection}>
         <Text style={styles.articleText}>Article #1</Text>
-      </View>
-      <View style={styles.articleSection}>
+        <TouchableOpacity style={styles.viewArticleButton} onPress={() => setModalVisible(true)}>
+          <Text style={styles.viewArticleText}>View Article</Text>
+        </TouchableOpacity>
+
         <Text style={styles.articleText}>Article #2</Text>
+        <TouchableOpacity style={styles.viewArticleButton} onPress={() => setModalVisible2(true)}>
+          <Text style={styles.viewArticleText}>View Article</Text>
+        </TouchableOpacity>
       </View>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}> Commentary: What will it take to eliminate dengue deaths in Singapore?</Text>
+            <ScrollView style={styles.scrollViewContent}>
+              <Text style={styles.modalContent}>
+                Singapore's fight against dengue remains challenging due to various factors like urbanization, climate change, and the adaptability of the Aedes mosquito. Despite extensive efforts in mosquito control and public awareness campaigns, dengue cases continue to surge periodically. The virus spreads more easily as warmer temperatures boost mosquito populations and breeding rates. Additionally, the mosquito has evolved to breed in smaller spaces and resist common insecticides, complicating eradication efforts and necessitating continuous adaptation in public health strategies.
+                
+                {'\n\n'} Referenced from: https://www.channelnewsasia.com/commentary/singapore-dengue-cases-deaths-outbreaks-why-difficult-eliminate-4639026
+              </Text>
+            </ScrollView>
+            <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
+                <Text style={styles.closeModalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible2}
+        onRequestClose={() => setModalVisible2(false)}
+      >
+        <View style={styles.modalBackground}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>15 dengue deaths so far in 2024, more than double the six in whole of 2023: NEA</Text>
+            <Text style={styles.modalContent}>
+              Singapore has reported 15 dengue-related deaths so far in 2024, over double the total in 2023, with 12,736 cases recorded to date. Despite a recent drop in cases, the NEA has identified 354 clusters and around 4,900 mosquito breeding sites, highlighting continued risks. The predominant virus strain is DENV-2, and transmission remains active in key areas like Jurong West and East. Public health measures encourage residents to reduce breeding habitats and use protective measures, as past outbreaks were fueled by warmer conditions and increased home exposure to mosquitoes.
+              
+              {'\n\n'} Referenced from: https://www.straitstimes.com/singapore/15-dengue-deaths-so-far-in-2024-more-than-double-in-whole-of-2023-nea 
+            </Text>
+            <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible2(false)}>
+                <Text style={styles.closeModalButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -45,7 +99,7 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: "#f0f4f8",
     alignItems: "center",
     justifyContent: "flex-start",
     paddingTop: 30,
@@ -61,6 +115,10 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  headerImage: {
+    width: 40,
+    height: 40,
   },
   welcomeSection: {
     width: "90%",
@@ -101,7 +159,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 20,
-    marginLeft: 150,
+    marginLeft: 170,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   viewMoreText: {
     color: "#ffffff",
@@ -113,6 +177,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   reportButtonText: {
     color: "#ffffff",
@@ -132,5 +202,93 @@ const styles = StyleSheet.create({
   },
   articleText: {
     fontSize: 18,
+  },
+  viewArticleButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 50,
+    backgroundColor: "#7b4b52",
+    borderRadius: 5,
+    marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  viewArticleText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
+
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+    textAlign: 'center',
+  },
+  modalContent: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    marginBottom: 20,
+  },
+  scrollViewContent: {
+    width: '100%',       
+    marginBottom: 20,
+  },
+  closeModalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 50,
+    backgroundColor: "#7b4b52",
+    borderRadius: 5,
+    marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  closeModalButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+  },
+
+  tipsButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 50,
+    backgroundColor: "#7b4b52",
+    borderRadius: 5,
+    marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  tipsButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
