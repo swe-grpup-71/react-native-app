@@ -14,21 +14,28 @@ interface SignInResponse {
 
 async function signin(email: string, password: string): Promise<any> {
   try {
-    const res = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/user/signin', {
+    const res = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/auth/signin', {
       method: 'POST',
       headers: {
-        Accept: 'application/json',
+        'Accept': 'application/json',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password })
 
     });
     
+    
     if (!res.ok) {
       throw new Error(`HTTP error! status: ${res.status}`);
     }
     
     const body: SignInResponse = await res.json();
+    if (res.status === 422) {
+      const errorDetails = await res.json();
+      console.warn("Validation errors:", errorDetails);
+      throw new Error(`Validation error: ${JSON.stringify(errorDetails)}`);
+    }
+    
     
     if (!body.status) {
       throw new Error(body.message || "Login failed");
@@ -40,7 +47,47 @@ async function signin(email: string, password: string): Promise<any> {
     console.warn("Network error:", err);
     throw err; // Rethrow the error so it can be handled by the calling function
   }
+//   if (body.status && body.data.token) {
+//     await AsyncStorage.setItem('authToken', body.data.token);
+//     console.log("Login successful, token stored.");
+//     return body.data;
+//   } else {
+//     throw new Error("Login failed: " + body.message);
+//   }
+// } catch (error) {
+//   console.error("Error during sign-in:", error);
+//   throw error;
+// }
 }
+// async function fetchProtectedData() {
+//   try {
+//     // Retrieve the token from AsyncStorage
+//     const token = await AsyncStorage.getItem('authToken');
+//     if (!token) throw new Error("No token found, please log in.");
+
+//     // Make a request to a protected endpoint with the Authorization header
+//     const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/protected-endpoint', {
+//       method: 'GET',
+//       headers: {
+//         'Authorization': `Bearer ${token}`,
+//         'Content-Type': 'application/json',
+//       },
+//     });
+
+//     if (!response.ok) {
+//       throw new Error(`Request failed with status: ${response.status}`);
+//     }
+
+//     const data = await response.json();
+//     console.log("Protected data:", data);
+//     return data;
+//   } catch (error) {
+//     console.error("Error fetching protected data:", error);
+//     throw error;
+//   }
+// }
+
+
 
 export default function SignIn() {
   const [form, setForm] = useState({
