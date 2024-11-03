@@ -47,45 +47,9 @@ async function signin(email: string, password: string): Promise<any> {
     console.warn("Network error:", err);
     throw err; // Rethrow the error so it can be handled by the calling function
   }
-//   if (body.status && body.data.token) {
-//     await AsyncStorage.setItem('authToken', body.data.token);
-//     console.log("Login successful, token stored.");
-//     return body.data;
-//   } else {
-//     throw new Error("Login failed: " + body.message);
-//   }
-// } catch (error) {
-//   console.error("Error during sign-in:", error);
-//   throw error;
-// }
+
 }
-// async function fetchProtectedData() {
-//   try {
-//     // Retrieve the token from AsyncStorage
-//     const token = await AsyncStorage.getItem('authToken');
-//     if (!token) throw new Error("No token found, please log in.");
 
-//     // Make a request to a protected endpoint with the Authorization header
-//     const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/protected-endpoint', {
-//       method: 'GET',
-//       headers: {
-//         'Authorization': `Bearer ${token}`,
-//         'Content-Type': 'application/json',
-//       },
-//     });
-
-//     if (!response.ok) {
-//       throw new Error(`Request failed with status: ${response.status}`);
-//     }
-
-//     const data = await response.json();
-//     console.log("Protected data:", data);
-//     return data;
-//   } catch (error) {
-//     console.error("Error fetching protected data:", error);
-//     throw error;
-//   }
-// }
 
 
 
@@ -127,50 +91,50 @@ export default function SignIn() {
   };
 
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View style={{ width: '100%', justifyContent: 'center', height: '100%', paddingHorizontal: 16, marginTop: 24 }}>
-          <Text style={{ fontSize: 24, fontWeight: '600', color: 'black', marginTop: 20 }}>
-            Log in to BuzzTracker
-          </Text>
-          <FormField
-            title="Email"
-            value={form.email}
-            handleChangeText={(e) => setForm({ ...form, email: e })}
-            otherStyles="mt-7"
-            keyboardType="email-address"
-          />
-          <FormField
-            title="Password"
-            value={form.password}
-            otherStyles="mt-7"
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-          />
-          <CustomButton
-            title="Sign In"
-            handlePress={submit}
-            containerStyles="mt-7"
-            isLoading={isSubmitting}
-          />
-          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
-            <Link
-              href="/forgot-password"
-              style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48' }}
-            >
-              Forgot password?
-            </Link>
-          </View>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
-            <Text style={{ fontSize: 16 }}>Don't have an account?</Text>
-            <Link
-              href="/sign-up"
-              style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48', marginLeft: 4 }}
-            >
-              Sign up now.
-            </Link>
-          </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
+  <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, backgroundColor: '#f5f5f5' }}>
+    <View style={{ width: '100%',  flex: 1, paddingHorizontal: 16 , paddingTop:100}}>
+      <Text style={{ fontSize: 24, fontWeight: '600', color: 'black' }}>
+        Log in to BuzzTracker
+      </Text>
+      <FormField
+        title="Email"
+        value={form.email}
+        handleChangeText={(e) => setForm({ ...form, email: e })}
+        otherStyles="mt-7"
+        keyboardType="email-address"
+      />
+      <FormField
+        title="Password"
+        value={form.password}
+        otherStyles="mt-7"
+        handleChangeText={(e) => setForm({ ...form, password: e })}
+      />
+      <CustomButton
+        title="Sign In"
+        handlePress={submit}
+        containerStyles="mt-7"
+        isLoading={isSubmitting}
+      />
+      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
+        <Link
+          href="/forgot-password"
+          style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48' }}
+        >
+          Forgot password?
+        </Link>
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
+        <Text style={{ fontSize: 16 }}>Don't have an account?</Text>
+        <Link
+          href="/sign-up"
+          style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48', marginLeft: 4 }}
+        >
+          Sign up now.
+        </Link>
+      </View>
+    </View>
+  </ScrollView>
+</SafeAreaView>
   );
 }
