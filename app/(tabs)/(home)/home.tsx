@@ -1,11 +1,10 @@
 import React, {useState} from "react";
-import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image  } from "react-native";
+import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image, Animated   } from "react-native";
 import { router} from 'expo-router';
 
 export default function Home() {
 
   const [modalVisible, setModalVisible] = useState(false);
-
   const [modalVisible2, setModalVisible2] = useState(false);
 
   return (
@@ -160,7 +159,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 20,
-    marginLeft: 150,
+    marginLeft: 170,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   viewMoreText: {
     color: "#ffffff",
@@ -172,6 +177,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   reportButtonText: {
     color: "#ffffff",
@@ -198,6 +209,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   viewArticleText: {
     color: "#ffffff",
@@ -245,6 +262,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   closeModalButtonText: {
     color: "#ffffff",
@@ -257,6 +280,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#7b4b52",
     borderRadius: 5,
     marginBottom: 30,
+
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   tipsButtonText: {
     color: "#ffffff",
