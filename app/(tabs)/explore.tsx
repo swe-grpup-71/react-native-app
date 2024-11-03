@@ -1,6 +1,6 @@
 import CustomButton from "@/components/CustomButton";
-import { CLUSTER_DATASET } from "@/constants/ClusterDataset";
 import { bufferPolygons } from "@/utils/bufferPolygons";
+import { getClusterDatasetFromAPI } from "@/utils/clusterAPI";
 import {
   geofenceEnabled,
   startBackgroundUpdate,
@@ -12,6 +12,8 @@ import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
 import MapboxGL from "@rnmapbox/maps";
 import * as Location from "expo-location";
+import * as Notifications from "expo-notifications";
+import { FeatureCollection, Geometry, MultiPolygon, Polygon } from "geojson";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -22,7 +24,6 @@ import {
   View,
 } from "react-native";
 import MapView from "react-native-maps";
-import * as Notifications from "expo-notifications";
 
 const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
 MapboxGL.setAccessToken(token);
@@ -38,17 +39,22 @@ export default function Explore() {
   const [isGeofencingEnabled, setIsGeofencingEnabled] =
     useState<boolean>(false);
   const [foregroundEnabled, setForegroundEnabled] = useState(false);
+  const [clusterDataset, setClusterDataset] =
+    useState<FeatureCollection<Geometry>>();
+  const [bufferedDataset, setBufferedDataset] =
+    useState<FeatureCollection<Polygon | MultiPolygon>>();
 
   // Create a reference to the MapView
   const mapRef = useRef<MapView>(null);
 
   // Buffer the polygons from the CLUSTER_DATASET
-  const bufferedDataset = bufferPolygons(CLUSTER_DATASET, 200); // Buffer by 200 meters
+  // const bufferedDataset = bufferPolygons(CLUSTER_DATASET, 200); // Buffer by 200 meters
 
   useFocusEffect(
     useCallback(() => {
       // Start location tracking when page is focused
       console.log("Explore page focused");
+      getClusterDataset();
       startForegroundUpdate();
       checkGeofencing();
 
@@ -67,6 +73,19 @@ export default function Explore() {
       }
     }, [position])
   );
+
+  const getClusterDataset = async () => {
+    const dataset = (await getClusterDatasetFromAPI()) as string;
+    // console.log(clusterDataset);
+    try {
+      const geoJsonObject = JSON.parse(dataset) as FeatureCollection<Geometry>;
+      setClusterDataset(geoJsonObject);
+      const bufferedObject = bufferPolygons(geoJsonObject, 200);
+      setBufferedDataset(bufferedObject);
+    } catch (error) {
+      console.error("Invalid GeoJSON string:", error);
+    }
+  };
 
   const checkGeofencing = async () => {
     const { granted } = await Location.getBackgroundPermissionsAsync();
@@ -258,7 +277,7 @@ export default function Explore() {
               />
             </MapboxGL.ShapeSource>
 
-            <MapboxGL.ShapeSource id="clusterDataset" shape={CLUSTER_DATASET}>
+            <MapboxGL.ShapeSource id="clusterDataset" shape={clusterDataset}>
               <MapboxGL.FillLayer
                 id="clusterFill"
                 style={{
