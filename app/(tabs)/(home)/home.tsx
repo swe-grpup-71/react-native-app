@@ -6,7 +6,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 export default function Home() {
 
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalVisible2, setModalVisible2] = useState(false);
+
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+
+  const articles = [
+      { id: 1, 
+        title: "Commentary: What will it take to eliminate dengue deaths in Singapore?",
+        longdescription: "Singapore's fight against dengue remains challenging due to various factors like urbanization, climate change, and the adaptability of the Aedes mosquito. Despite extensive efforts in mosquito control and public awareness campaigns, dengue cases continue to surge periodically. The virus spreads more easily as warmer temperatures boost mosquito populations and breeding rates. Additionally, the mosquito has evolved to breed in smaller spaces and resist common insecticides, complicating eradication efforts and necessitating continuous adaptation in public health strategies.\n\nReferenced from: https://www.channelnewsasia.com/commentary/singapore-dengue-cases-deaths-outbreaks-why-difficult-eliminate-4639026", image: require('../../../assets/images/article1.png') },
+      { id: 2, 
+        title: "15 dengue deaths so far in 2024, more than double the six in whole of 2023: NEA", 
+        longdescription: "Singapore has reported 15 dengue-related deaths so far in 2024, over double the total in 2023, with 12,736 cases recorded to date. Despite a recent drop in cases, the NEA has identified 354 clusters and around 4,900 mosquito breeding sites, highlighting continued risks. The predominant virus strain is DENV-2, and transmission remains active in key areas like Jurong West and East. Public health measures encourage residents to reduce breeding habitats and use protective measures, as past outbreaks were fueled by warmer conditions and increased home exposure to mosquitoes.\n\n Referenced from: https://www.straitstimes.com/singapore/15-dengue-deaths-so-far-in-2024-more-than-double-in-whole-of-2023-nea ", image: require('../../../assets/images/article2.png') },
+      { id: 3, 
+        title: "Rise in dengue cases underscores need for constant vigilance",
+        longdescription: "The rise in dengue cases in Singapore highlights the importance of continuous vigilance, especially given environmental factors conducive to mosquito breeding. Enhanced public awareness, early detection, and preventive actions are crucial in reducing transmission. Strategies include regular inspections to eliminate mosquito breeding sites, public education campaigns, and coordination with healthcare providers. By fostering community involvement and proactive healthcare measures, Singapore aims to mitigate the impact of dengue outbreaks. \n\n Referenced from: https://www.ncid.sg/Health-Professionals/Articles/Pages/Rise-in-dengue-cases-underscores-need-for-constant-vigilance.aspx", image: require('../../../assets/images/article3.png') },
+  ];
+
+  const openArticle = (article: any) => {
+    setSelectedArticle(article);
+    setModalVisible(true);
+  };
+
   const [username, setUsername] = useState("");
   useEffect(() => {
     const fetchUsername = async () => {
@@ -28,7 +47,7 @@ export default function Home() {
 
       <View style={styles.welcomeSection}>
         <View style={styles.welcomeRow}>
-          <Text style={styles.welcomeText}>Welcome back, {username}!</Text>
+          {<Text style={styles.welcomeText}>Welcome back, {username}!</Text>}
         </View>
 
         <Text style={styles.statusText}>Current Dengue Status:</Text>
@@ -39,71 +58,51 @@ export default function Home() {
         <TouchableOpacity style={styles.viewMoreButton}>
           <Text style={styles.viewMoreText} onPress={() => router.push('/(home)/viewMore')}>View More</Text>
         </TouchableOpacity>
-      <Text style={styles.reportPrompt}>
-          Have dengue? Report it so we can warn others
-      </Text>
-      
-      <TouchableOpacity style={styles.reportButton} onPress={() => router.push('/(home)/report_form')}>
-        <Text style={styles.reportButtonText}>Report Now</Text>
-      </TouchableOpacity>
+        <Text style={styles.reportPrompt}>
+            Have dengue? Report it so we can warn others
+        </Text>
+        
+        <TouchableOpacity style={styles.reportButton} onPress={() => router.push('/(home)/report_form')}>
+          <Text style={styles.reportButtonText}>Report Now</Text>
+        </TouchableOpacity>
     
       </View>
 
       <View style={styles.articleSection}>
-        <Text style={styles.articleText}>Article #1</Text>
-        <TouchableOpacity style={styles.viewArticleButton} onPress={() => setModalVisible(true)}>
-          <Text style={styles.viewArticleText}>View Article</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.articleText}>Article #2</Text>
-        <TouchableOpacity style={styles.viewArticleButton} onPress={() => setModalVisible2(true)}>
-          <Text style={styles.viewArticleText}>View Article</Text>
-        </TouchableOpacity>
+        <Text style={styles.header}>Explore Articles</Text>
+        <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} style={styles.scrollView}>
+          {articles.map((article) => (
+            <View key={article.id} style={styles.card}>
+              <Image source={article.image} style={styles.cardImage} />
+              <Text style={styles.cardTitle}>{article.title}</Text>
+              <TouchableOpacity onPress={() => openArticle(article)} style={styles.button}>
+                <Text style={styles.buttonText}>View Article</Text>
+              </TouchableOpacity>
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}> Commentary: What will it take to eliminate dengue deaths in Singapore?</Text>
-            <ScrollView style={styles.scrollViewContent}>
-              <Text style={styles.modalContent}>
-                Singapore's fight against dengue remains challenging due to various factors like urbanization, climate change, and the adaptability of the Aedes mosquito. Despite extensive efforts in mosquito control and public awareness campaigns, dengue cases continue to surge periodically. The virus spreads more easily as warmer temperatures boost mosquito populations and breeding rates. Additionally, the mosquito has evolved to breed in smaller spaces and resist common insecticides, complicating eradication efforts and necessitating continuous adaptation in public health strategies.
-                
-                {'\n\n'} Referenced from: https://www.channelnewsasia.com/commentary/singapore-dengue-cases-deaths-outbreaks-why-difficult-eliminate-4639026
-              </Text>
-            </ScrollView>
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible(false)}>
-                <Text style={styles.closeModalButtonText}>Close</Text>
-            </TouchableOpacity>
+      {selectedArticle && (
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={modalVisible}
+          onRequestClose={() => setModalVisible(false)}
+        >
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
+              <Image source={selectedArticle.image} style={styles.modalImage} />
+              <Text style={styles.modalDescription}>{selectedArticle.longdescription}</Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
+      )}
 
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible2}
-        onRequestClose={() => setModalVisible2(false)}
-      >
-        <View style={styles.modalBackground}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>15 dengue deaths so far in 2024, more than double the six in whole of 2023: NEA</Text>
-            <Text style={styles.modalContent}>
-              Singapore has reported 15 dengue-related deaths so far in 2024, over double the total in 2023, with 12,736 cases recorded to date. Despite a recent drop in cases, the NEA has identified 354 clusters and around 4,900 mosquito breeding sites, highlighting continued risks. The predominant virus strain is DENV-2, and transmission remains active in key areas like Jurong West and East. Public health measures encourage residents to reduce breeding habitats and use protective measures, as past outbreaks were fueled by warmer conditions and increased home exposure to mosquitoes.
-              
-              {'\n\n'} Referenced from: https://www.straitstimes.com/singapore/15-dengue-deaths-so-far-in-2024-more-than-double-in-whole-of-2023-nea 
-            </Text>
-            <TouchableOpacity style={styles.closeModalButton} onPress={() => setModalVisible2(false)}>
-                <Text style={styles.closeModalButtonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -233,37 +232,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  modalBackground: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContainer: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 10,
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-    textAlign: 'center',
-  },
-  modalContent: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#555',
-    marginBottom: 20,
-  },
   scrollViewContent: {
     width: '100%',       
     marginBottom: 20,
@@ -302,5 +270,107 @@ const styles = StyleSheet.create({
   tipsButtonText: {
     color: "#ffffff",
     fontSize: 16,
+  },
+
+  scrollView: {
+    flexDirection: 'row',
+  },
+  card: {
+    width: 250,
+    marginRight: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
+    padding: 15,
+    paddingLeft: 20,
+  },
+  cardImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 15,
+    objectFit: 'cover',
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 5,
+    textAlign: "center",
+  },
+  cardDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  button: {
+    backgroundColor: '#7b4b52',
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  modalBackground: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '80%',
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+    textAlign: 'center',
+  },
+  modalContent: {
+    width: '85%',
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: '#555',
+    textAlign: 'auto',
+    marginBottom: 20,
+  },
+  closeButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 25,
+    backgroundColor: '#7b4b52',
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });
