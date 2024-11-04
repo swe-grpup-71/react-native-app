@@ -1,12 +1,24 @@
-import React, {useState} from "react";
+import React, {useState, useEffect} from "react";
 import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image  } from "react-native";
 import { router} from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Home() {
 
   const [modalVisible, setModalVisible] = useState(false);
 
   const [modalVisible2, setModalVisible2] = useState(false);
+  const [username, setUsername] = useState("");
+  useEffect(() => {
+    const fetchUsername = async () => {
+      const storedUsername = await AsyncStorage.getItem('username');
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+    };
+
+    fetchUsername();
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -17,7 +29,7 @@ export default function Home() {
 
       <View style={styles.welcomeSection}>
         <View style={styles.welcomeRow}>
-          <Text style={styles.welcomeText}>Welcome back, ____</Text>
+          <Text style={styles.welcomeText}>Welcome back, {username}!</Text>
         </View>
 
         <Text style={styles.statusText}>Current Dengue Status:</Text>
@@ -103,7 +115,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingTop: 30,
+    paddingTop: 80,
   },
   headerWrapper: {
     width: "100%",

@@ -8,8 +8,8 @@ export default function Details() {
   const [selectedSymptom, setSelectedSymptom] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [symptoms, setSymptoms] = useState(['Soreness']);
-  const [locations, setLocations] = useState(['NTU']);
+  const [symptoms, setSymptoms] = useState(['']);
+  const [locations, setLocations] = useState(['']);
 
   const handleSymptomSelect = (symptom: string) => {
     if (!symptoms.includes(symptom)) {

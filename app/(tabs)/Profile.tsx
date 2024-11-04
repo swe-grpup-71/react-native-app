@@ -1,19 +1,34 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { router } from 'expo-router'; // Import router for navigation
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function ProfileScreen() {
+  const [username, setUsername] = useState("");
+
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const storedUsername = await AsyncStorage.getItem("username");
+        if (storedUsername) setUsername(storedUsername);
+      } catch (error) {
+        console.error("Failed to load profile data:", error);
+      }
+    };
+    loadProfileData();
+  }, []);
+
+  const profileInitial = username ? username.charAt(0).toUpperCase() : "";
   return (
     <View style={styles.container}>
       {/* Profile Header */}
       <View style={styles.header}>
         <View style={styles.profileImageContainer}>
           {/* Profile Image or Placeholder */}
-          <Text style={styles.profileInitial}>A</Text>
+          <Text style={styles.profileInitial}>{profileInitial}</Text>
         </View>
-        <Text style={styles.profileName}>Aaron</Text>
-        <Text style={styles.profileEmail}>aaron123@gmail.com</Text>
+        <Text style={styles.profileName}>{username}</Text>
       </View>
 
       {/* Options */}
@@ -70,11 +85,6 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: '#333',
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: '#7e7e7e',
-    marginTop: 2,
   },
   optionContainer: {
     width: '100%',

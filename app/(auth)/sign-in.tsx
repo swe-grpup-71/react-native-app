@@ -4,6 +4,7 @@ import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import { Alert, ScrollView, View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Async function to handle the sign-in request
 interface SignInResponse {
@@ -30,6 +31,7 @@ async function signin(email: string, password: string): Promise<any> {
     }
     
     const body: SignInResponse = await res.json();
+    await AsyncStorage.setItem('username', body.data.username);
     if (res.status === 422) {
       const errorDetails = await res.json();
       console.warn("Validation errors:", errorDetails);
@@ -72,7 +74,7 @@ export default function SignIn() {
       const userData = await signin(form.email, form.password);
 
       // If successful, show a success message
-      Alert.alert("Success", "User signed in successfully");
+      // Alert.alert("Success", "User signed in successfully");
 
       // Navigate to the home screen
       router.push("/home");

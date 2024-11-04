@@ -2,14 +2,44 @@ import CustomButton from "@/components/CustomButton";
 import FormField from "@/components/FormField";
 import { Link } from "expo-router";
 import React, { useState } from "react";
-import { SafeAreaView, ScrollView, Text, View } from "react-native";
+import { SafeAreaView, ScrollView, Text, View, Alert} from "react-native";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setSubmitting] = useState(false);
 
-  const submit = () => {
-    console.log("reset password");
+  const submit = async () => {
+    if (email === "") {
+      Alert.alert("Error", "Please enter your email address");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Replace with your actual backend API endpoint
+      const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/auth/forgot-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "accept": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      if (response.status === 200) {
+        const result = await response.json();
+        Alert.alert("Success", "Password reset email sent successfully");
+        // Handle additional actions like storing recovery token if necessary
+      } else {
+        const errorData = await response.json();
+        Alert.alert("Error", errorData.message || "Failed to reset password");
+      }
+    } catch (error) {
+      Alert.alert("Error", (error as any).message || "An error occurred");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
