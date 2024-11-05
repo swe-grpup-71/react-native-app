@@ -1,4 +1,5 @@
 import CustomButton from "@/components/CustomButton";
+import DengueClusterTooltip from "@/components/DengueClusterTooltip";
 import { bufferPolygons } from "@/utils/bufferPolygons";
 import { getClusterDatasetFromAPI } from "@/utils/clusterAPI";
 import {
@@ -11,9 +12,17 @@ import {
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { useFocusEffect } from "@react-navigation/native";
 import MapboxGL from "@rnmapbox/maps";
+import { OnPressEvent } from "@rnmapbox/maps/lib/typescript/src/types/OnPressEvent";
 import * as Location from "expo-location";
 import * as Notifications from "expo-notifications";
-import { FeatureCollection, Geometry, MultiPolygon, Polygon } from "geojson";
+import {
+  Feature,
+  FeatureCollection,
+  GeoJsonProperties,
+  Geometry,
+  MultiPolygon,
+  Polygon,
+} from "geojson";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -24,6 +33,18 @@ import {
   View,
 } from "react-native";
 import MapView from "react-native-maps";
+
+interface DengueClusterData {
+  LOCALITY: string;
+  CASE_SIZE: string;
+  NAME: string;
+  HYPERLINK: string;
+  HOMES: string;
+  PUBLIC_PLACES: string;
+  CONSTRUCTION_SITES: string;
+  INC_CRC: string;
+  FMEL_UPD_D: string;
+}
 
 const token = process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN as string;
 MapboxGL.setAccessToken(token);
@@ -43,6 +64,11 @@ export default function Explore() {
     useState<FeatureCollection<Geometry>>();
   const [bufferedDataset, setBufferedDataset] =
     useState<FeatureCollection<Polygon | MultiPolygon>>();
+  const [selectedCluster, setSelectedCluster] = useState<{
+    features: Array<GeoJSON.Feature>;
+    coordinates: { latitude: number; longitude: number };
+    clusterData: DengueClusterData;
+  } | null>(null);
 
   // Create a reference to the MapView
   const mapRef = useRef<MapView>(null);
@@ -66,13 +92,45 @@ export default function Explore() {
     }, [])
   );
 
-  useEffect(
-    useCallback(() => {
-      if (enableZoom && position) {
-        setEnableZoom(false);
-      }
-    }, [position])
-  );
+  useEffect(() => {
+    const getFeaturesOrderedByCaseSize = (
+      features: Feature<Geometry, GeoJsonProperties>[]
+    ) => {
+      // Extract CASE_SIZE and Name from each feature, then sort by CASE_SIZE in descending order
+      const casesWithNames = features
+        .map((feature) => {
+          // Ensure properties and Description exist
+          if (!feature.properties || !feature.properties.Description) {
+            return { name: feature.properties?.Name || "Unknown", caseSize: 0 };
+          }
+
+          const caseSize = parseInt(
+            feature.properties.Description.match(
+              /<th>CASE_SIZE<\/th> <td>(\d+)<\/td>/
+            )?.[1] || "0",
+            10
+          );
+
+          return { name: feature.properties.Name || "Unknown", caseSize };
+        })
+        .sort((a, b) => b.caseSize - a.caseSize); // Sort by caseSize in descending order
+
+      return casesWithNames;
+    };
+
+    if (clusterDataset) {
+      const orderedClusters = getFeaturesOrderedByCaseSize(
+        clusterDataset.features
+      );
+      // console.log(orderedClusters);
+    }
+  }, [clusterDataset]);
+
+  useEffect(() => {
+    if (enableZoom && position) {
+      setEnableZoom(false);
+    }
+  }, [position]);
 
   const getClusterDataset = async () => {
     const dataset = (await getClusterDatasetFromAPI()) as string;
@@ -213,6 +271,56 @@ export default function Explore() {
     }
   };
 
+  const handleClusterPress = (e: OnPressEvent) => {
+    const { features, coordinates } = e;
+    function extractTableDataToJson(htmlString: string): DengueClusterData {
+      // Create a DOMParser-like environment for Node.js
+      const result: DengueClusterData = {
+        LOCALITY: "",
+        CASE_SIZE: "",
+        NAME: "",
+        HYPERLINK: "",
+        HOMES: "",
+        PUBLIC_PLACES: "",
+        CONSTRUCTION_SITES: "",
+        INC_CRC: "",
+        FMEL_UPD_D: "",
+      };
+
+      // Use regex to extract data
+      const rows = htmlString.match(/<tr[^>]*>.*?<\/tr>/gs) || [];
+
+      rows.forEach((row) => {
+        // Skip the header row
+        if (row.includes("<em>Attributes</em>")) return;
+
+        // Extract the header (th) and data (td)
+        const headerMatch = row.match(/<th[^>]*>(.*?)<\/th>/);
+        const dataMatch = row.match(/<td[^>]*>(.*?)<\/td>/);
+
+        if (headerMatch && dataMatch) {
+          const key = headerMatch[1].trim() as keyof DengueClusterData;
+          const value = dataMatch[1].trim();
+          result[key] = value;
+        }
+      });
+
+      return result;
+    }
+
+    const clusterData = extractTableDataToJson(
+      features[0]?.properties?.Description
+    );
+    console.log(clusterData);
+    setSelectedCluster({ features, coordinates, clusterData });
+  };
+
+  const handleCameraChange = (e: any) => {
+    if (e.properties.zoom < 12) {
+      setSelectedCluster(null);
+    }
+  };
+
   return (
     <View className="flex-1 m-0 p-0">
       <Modal visible={modalVisible} transparent={true} animationType="slide">
@@ -252,6 +360,8 @@ export default function Explore() {
             // ref={mapRef} // Attach the ref to the MapView
             className="w-full h-full"
             styleURL={MapboxGL.StyleURL.Light}
+            onPress={() => setSelectedCluster(null)}
+            onCameraChanged={handleCameraChange}
           >
             {position && enableZoom && (
               <MapboxGL.Camera
@@ -277,7 +387,11 @@ export default function Explore() {
               />
             </MapboxGL.ShapeSource>
 
-            <MapboxGL.ShapeSource id="clusterDataset" shape={clusterDataset}>
+            <MapboxGL.ShapeSource
+              id="clusterDataset"
+              shape={clusterDataset}
+              onPress={handleClusterPress}
+            >
               <MapboxGL.FillLayer
                 id="clusterFill"
                 style={{
@@ -297,6 +411,18 @@ export default function Explore() {
               />
             </MapboxGL.ShapeSource>
             <MapboxGL.UserLocation />
+            {selectedCluster && (
+              <MapboxGL.MarkerView
+                coordinate={[
+                  selectedCluster.coordinates.longitude,
+                  selectedCluster.coordinates.latitude,
+                ]} // Use coordinates from the selected cluster
+              >
+                <View>
+                  <DengueClusterTooltip data={selectedCluster.clusterData} />
+                </View>
+              </MapboxGL.MarkerView>
+            )}
           </MapboxGL.MapView>
           <View className="absolute bottom-[4vh] items-center">
             <TouchableOpacity
