@@ -34,7 +34,7 @@ export default function ProfileScreen() {
       {/* Options */}
       <View style={styles.optionContainer}>
         <ProfileOption title="Edit Profile" icon="chevron-right" />
-        <ProfileOption title="Change Password" icon="chevron-right" />
+        <ProfileOption title="Change Password" icon="chevron-right" onPress={() => router.push('/(profile)/change_password')} />
         <ProfileOption title="Sign Out" icon="chevron-right" onPress={() => router.push('/')} />
       </View>
     </View>
@@ -59,9 +59,9 @@ const ProfileOption: React.FC<ProfileOptionProps> = ({ title, icon, onPress }) =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F4F4F8',
+    backgroundColor: "#f0f4f8",
     alignItems: 'center',
-    paddingTop: 50,
+    paddingTop: 80,
   },
   header: {
     alignItems: 'center',

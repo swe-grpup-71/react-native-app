@@ -7,9 +7,6 @@ export default function ReportDetails() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Text style={styles.backText}>← Back</Text>
-      </TouchableOpacity>
 
       <Text style={styles.header}>Report Details</Text>
 

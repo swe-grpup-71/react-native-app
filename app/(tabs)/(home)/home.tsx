@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image  } from "react-native";
+import { View, Text, StyleSheet, Modal, ScrollView, TouchableOpacity, Image, Alert } from "react-native";
 import { router} from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -8,6 +8,7 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalVisible2, setModalVisible2] = useState(false);
   const [username, setUsername] = useState("");
+  const [dengueStatus, setDengueStatus] = useState("Loading...");
   useEffect(() => {
     const fetchUsername = async () => {
       const storedUsername = await AsyncStorage.getItem('username');
@@ -15,9 +16,50 @@ export default function Home() {
         setUsername(storedUsername);
       }
     };
+    const fetchDengueStatus = async () => {
+      try {
+       
+        const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-status", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+    
+          },
+        });
+
+        const contentType = response.headers.get("content-type");
+        let result;
+
+        if (contentType && contentType.includes("application/json")) {
+          result = await response.json();
+        } else {
+          result = await response.text();
+        }
+
+        if (response.status === 200 && result.status) {
+          setDengueStatus(result.data.dengueStatus); // Accessing the dengueStatus from the response
+        } else if (response.status === 401) {
+          Alert.alert("Error", "Unauthorized access. Please log in again.");
+        } else {
+          Alert.alert("Error", "Failed to fetch dengue status.");
+          setDengueStatus("Unknown");
+        }
+      } catch (error) {
+        console.warn("Network error:", error);
+        Alert.alert("Error", "Unable to connect to the server.");
+        setDengueStatus("Unknown");
+      }
+    };
 
     fetchUsername();
+    fetchDengueStatus();
+    
   }, []);
+  const statusBoxStyle = [
+    styles.statusBox,
+    dengueStatus === "Positive" ? styles.positiveStatus : styles.negativeStatus
+  ];
 
   return (
     <View style={styles.container}>
@@ -33,8 +75,8 @@ export default function Home() {
 
         <Text style={styles.statusText}>Current Dengue Status:</Text>
 
-        <View style={styles.statusBox}>
-          <Text style={styles.status}>Positive</Text>
+        <View style={statusBoxStyle}>
+          <Text style={styles.status}>{dengueStatus}</Text>
         </View>
         <TouchableOpacity style={styles.viewMoreButton}>
           <Text style={styles.viewMoreText} onPress={() => router.push('/(home)/viewMore')}>View More</Text>
@@ -156,14 +198,32 @@ const styles = StyleSheet.create({
   },
   statusBox: {
     width: "80%",
-    paddingVertical: 10,
-    backgroundColor: "#d3d3d3",
+    paddingVertical: 15,
+    borderRadius: 10,
     alignItems: "center",
-    marginBottom: 10,
+    justifyContent: "center",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 6,
   },
   status: {
-    fontSize: 20,
-    fontWeight: "bold",
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#fff",
+    textAlign: "center",
+  },
+  positiveStatus: {
+    backgroundColor: "#F44336", 
+    borderColor: "#D32F2F",
+    borderWidth: 1,
+  },
+  negativeStatus: {
+    backgroundColor: "#4CAF50", 
+    borderColor: "#388E3C",
+    borderWidth: 1,
   },
   viewMoreButton: {
     paddingVertical: 5,

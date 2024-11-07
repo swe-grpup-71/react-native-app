@@ -13,7 +13,7 @@ export default function HomeNavigation() {
           }}
         />
           <Stack.Screen name="submitted_thankyou" options={{headerShown: false }} />
-          <Stack.Screen name="viewMore" options={{headerShown: false }} />
+          <Stack.Screen name="viewMore" options={{title: 'Report Details',headerShown: true }} />
       </Stack>
     </>
   );

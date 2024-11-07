@@ -32,6 +32,11 @@ async function signin(email: string, password: string): Promise<any> {
     
     const body: SignInResponse = await res.json();
     await AsyncStorage.setItem('username', body.data.username);
+    // const token = body.data.token; // Assuming token is in the response as 'token'
+
+    //   // Store token in AsyncStorage
+    //   await AsyncStorage.setItem("authToken", token);
+
     if (res.status === 422) {
       const errorDetails = await res.json();
       console.warn("Validation errors:", errorDetails);
