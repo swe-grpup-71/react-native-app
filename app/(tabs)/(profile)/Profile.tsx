@@ -33,7 +33,7 @@ export default function ProfileScreen() {
 
       {/* Options */}
       <View style={styles.optionContainer}>
-        <ProfileOption title="Edit Profile" icon="chevron-right" />
+        <ProfileOption title="Change Username" icon="chevron-right" />
         <ProfileOption title="Change Password" icon="chevron-right" onPress={() => router.push('/(profile)/change_password')} />
         <ProfileOption title="Sign Out" icon="chevron-right" onPress={() => router.push('/')} />
       </View>
@@ -41,9 +41,11 @@ export default function ProfileScreen() {
   );
 }
 
+import { IconName } from '@fortawesome/fontawesome-common-types';
+
 interface ProfileOptionProps {
   title: string;
-  icon: string;
+  icon: IconName;
   onPress?: () => void;
 }
 

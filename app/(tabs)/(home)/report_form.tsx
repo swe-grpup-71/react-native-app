@@ -1,25 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { Href, router} from 'expo-router';
-
+import { router } from 'expo-router';
 
 export default function Details() {
   const [selectedSymptom, setSelectedSymptom] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [remarks, setRemarks] = useState('');
-  const [symptoms, setSymptoms] = useState(['']);
-  const [locations, setLocations] = useState(['']);
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [locations, setLocations] = useState<{ name: string, coordinates: { latitude: number, longitude: number } }[]>([]);
 
   const handleSymptomSelect = (symptom: string) => {
-    if (!symptoms.includes(symptom)) {
+    if (symptom && !symptoms.includes(symptom)) {
       setSymptoms([...symptoms, symptom]);
     }
   };
 
   const handleLocationSelect = (location: string) => {
-    if (!locations.includes(location)) {
-      setLocations([...locations, location]);
+    if (location && !locations.find(loc => loc.name === location)) {
+      // Example coordinates; these should come from your actual data source
+      const coordinates = {
+        latitude: Math.random() * 90, // Replace with actual latitude
+        longitude: Math.random() * 180 // Replace with actual longitude
+      };
+      setLocations([...locations, { name: location, coordinates }]);
     }
   };
 
@@ -28,7 +32,36 @@ export default function Details() {
   };
 
   const handleLocationRemove = (location: string) => {
-    setLocations(locations.filter(item => item !== location));
+    setLocations(locations.filter(item => item.name !== location));
+  };
+
+  const handleSubmit = async () => {
+    const payload = {
+      symptoms,
+      locations,
+      remarks
+    };
+
+    try {
+      const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/create-case', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        Alert.alert('Success', `Case created with ID: ${result.data.caseId}`);
+        router.push('/submitted_thankyou');
+      } else {
+        Alert.alert('Error', 'Failed to create case');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', 'An error occurred while submitting the case');
+    }
   };
 
   return (
@@ -36,17 +69,20 @@ export default function Details() {
       <Text style={styles.header}>Please answer the questions below</Text>
 
       <Text style={styles.label}>Pick your symptoms:</Text>
-      <View style={styles.chipContainer}>
-        {symptoms.map((symptom, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.chip}
-            onPress={() => handleSymptomRemove(symptom)}
-          >
-            <Text style={styles.chipText}>{symptom} ✕</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {symptoms.length > 0 && (
+        <View style={styles.chipContainer}>
+          {symptoms.map((symptom, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.chip}
+              onPress={() => handleSymptomRemove(symptom)}
+            >
+              <Text style={styles.chipText}>{symptom} ✕</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      <Text style={styles.pickerTitle}>Select a Symptom:</Text>
       <Picker
         selectedValue={selectedSymptom}
         onValueChange={(itemValue) => {
@@ -55,24 +91,26 @@ export default function Details() {
         }}
         style={styles.picker}
       >
-        <Picker.Item label="Pick a Symptom" value="" />
         <Picker.Item label="Fever" value="Fever" />
         <Picker.Item label="Chills" value="Chills" />
         <Picker.Item label="Headache" value="Headache" />
       </Picker>
 
       <Text style={styles.label}>Frequency Visit Locations:</Text>
-      <View style={styles.chipContainer}>
-        {locations.map((location, index) => (
-          <TouchableOpacity
-            key={index}
-            style={styles.chip}
-            onPress={() => handleLocationRemove(location)}
-          >
-            <Text style={styles.chipText}>{location} ✕</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {locations.length > 0 && (
+        <View style={styles.chipContainer}>
+          {locations.map((location, index) => (
+            <TouchableOpacity
+              key={index}
+              style={styles.chip}
+              onPress={() => handleLocationRemove(location.name)}
+            >
+              <Text style={styles.chipText}>{location.name} ✕</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+      <Text style={styles.pickerTitle}>Select a Location:</Text>
       <Picker
         selectedValue={selectedLocation}
         onValueChange={(itemValue) => {
@@ -81,7 +119,6 @@ export default function Details() {
         }}
         style={styles.picker}
       >
-        <Picker.Item label="Pick a Location" value="" />
         <Picker.Item label="NTU" value="NTU" />
         <Picker.Item label="NUS" value="NUS" />
         <Picker.Item label="SMU" value="SMU" />
@@ -96,7 +133,7 @@ export default function Details() {
         onChangeText={setRemarks}
       />
 
-      <TouchableOpacity style={styles.submitButton} onPress={() =>  router.push('/submitted_thankyou')}>
+      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -117,6 +154,12 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 5,
+  },
+  pickerTitle: {
+    fontSize: 14,
+    marginTop: 10,
+    marginBottom: 5,
+    color: '#555',
   },
   chipContainer: {
     flexDirection: 'row',
@@ -148,12 +191,19 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: '#7b4b52',
-    paddingVertical: 10,
-    borderRadius: 5,
+    paddingVertical: 12,
+    borderRadius: 30,
     alignItems: 'center',
+    marginTop: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
   },
   submitButtonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

@@ -7,12 +7,12 @@ export default {
     ...baseConfig.expo,
     plugins: [
       ...(baseConfig.expo.plugins || []),
-      [
-        "@rnmapbox/maps",
-        {
-          RNMapboxMapsDownloadToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
-        }
-      ]
+      // [
+      //   "@rnmapbox/maps",
+      //   {
+      //     RNMapboxMapsDownloadToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
+      //   }
+      // ]
     ],
   },
 };
