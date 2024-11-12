@@ -42,7 +42,11 @@ export default function ProfileScreen() {
       {/* Options */}
       <View style={styles.optionContainer}>
         <ProfileOption title="Edit Profile" icon="chevron-right" />
-        <ProfileOption title="Change Password" icon="chevron-right" />
+        <ProfileOption
+          title="Change Password"
+          icon="chevron-right"
+          onPress={() => router.push("/change_password")}
+        />
         <ProfileOption
           title="Sign Out"
           icon="chevron-right"
