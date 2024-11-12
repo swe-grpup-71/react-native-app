@@ -1,14 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import axios from "axios";
+import { useNavigation } from "@react-navigation/native";
+import * as SecureStore from "expo-secure-store";
 
 export default function ReportDetails() {
   interface CaseItem {
     caseId: string;
     time: string;
     symptoms: string[];
-    locations: { name: string; coordinates: { latitude: number; longitude: number } }[];
+    locations: {
+      name: string;
+      coordinates: { latitude: number; longitude: number };
+    }[];
     remarks: string;
   }
 
@@ -20,12 +30,24 @@ export default function ReportDetails() {
   useEffect(() => {
     const fetchCaseDetails = async () => {
       try {
-        const response = await axios.get('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-case');
-        console.log('Response Data:', response.data); // Log to check the structure of the response
+        const userId = await SecureStore.getItemAsync("userId");
+        // console.log(userId);
+        const response = await axios.get(
+          `https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-case?userId=${userId}`
+        );
+        console.log("Response Data:", response.data); // Log to check the structure of the response
 
-        if (response.status === 200 && response.data.status && Array.isArray(response.data.data)) {
+        if (
+          response.status === 200 &&
+          response.data.status &&
+          Array.isArray(response.data.data)
+        ) {
           setCaseData(response.data.data);
-        } else if (response.status === 200 && response.data.status && response.data.data) {
+        } else if (
+          response.status === 200 &&
+          response.data.status &&
+          response.data.data
+        ) {
           // Handle single object case as an array
           setCaseData([response.data.data]);
         } else {
@@ -33,14 +55,14 @@ export default function ReportDetails() {
         }
       } catch (err) {
         if (axios.isAxiosError(err) && err.response?.status === 404) {
-          console.log('404: No cases found');
+          console.log("404: No cases found");
           setCaseData([]);
         } else if (err instanceof Error) {
-          console.error('Error:', err.message);
+          console.error("Error:", err.message);
           setError(err.message);
         } else {
-          console.error('Unknown error occurred');
-          setError('An unknown error occurred');
+          console.error("Unknown error occurred");
+          setError("An unknown error occurred");
         }
       } finally {
         setLoading(false);
@@ -51,7 +73,9 @@ export default function ReportDetails() {
   }, []);
 
   if (loading) {
-    return <ActivityIndicator size="large" color="#7b4b52" style={styles.loader} />;
+    return (
+      <ActivityIndicator size="large" color="#7b4b52" style={styles.loader} />
+    );
   }
 
   if (error) {
@@ -73,16 +97,22 @@ export default function ReportDetails() {
         <View key={index} style={styles.detailsCard}>
           <Text style={styles.detailItem}>
             <Text style={styles.detailLabel}>Report Date: </Text>
-            <Text style={styles.detailValue}>{new Date(caseItem.time).toLocaleDateString()}</Text>
+            <Text style={styles.detailValue}>
+              {new Date(caseItem.time).toLocaleDateString()}
+            </Text>
           </Text>
 
           <Text style={styles.detailItem}>
             <Text style={styles.detailLabel}>Symptoms: </Text>
-            <Text style={styles.detailValue}>{caseItem.symptoms.join(', ')}</Text>
+            <Text style={styles.detailValue}>
+              {caseItem.symptoms.join(", ")}
+            </Text>
           </Text>
 
           <Text style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Frequently Visited Locations: </Text>
+            <Text style={styles.detailLabel}>
+              Frequently Visited Locations:{" "}
+            </Text>
             {caseItem.locations.map((location, locIndex) => (
               <Text key={locIndex} style={styles.detailValue}>
                 {location.name}
@@ -92,7 +122,9 @@ export default function ReportDetails() {
 
           <Text style={styles.detailItem}>
             <Text style={styles.detailLabel}>Remarks: </Text>
-            <Text style={styles.detailValue}>{caseItem.remarks || 'No remarks provided'}</Text>
+            <Text style={styles.detailValue}>
+              {caseItem.remarks || "No remarks provided"}
+            </Text>
           </Text>
         </View>
       ))}
@@ -103,41 +135,41 @@ export default function ReportDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
     padding: 20,
   },
   loader: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 20,
   },
   noCasesContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   noCasesText: {
     fontSize: 18,
-    color: '#666',
+    color: "#666",
   },
   header: {
     fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
     marginBottom: 20,
-    color: '#333',
+    color: "#333",
   },
   detailsCard: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     padding: 20,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -149,10 +181,10 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   detailLabel: {
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   detailValue: {
-    color: '#666',
+    color: "#666",
   },
 });

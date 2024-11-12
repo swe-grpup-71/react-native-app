@@ -1,17 +1,34 @@
 import React, { useState } from "react";
-import { View, ScrollView, Alert } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FormField from "@/components/FormField"; // Import the FormField component
 import CustomButton from "@/components/CustomButton";
-import { router } from "expo-router";
+import { router, Link } from "expo-router";
+import { ClerkAPIError } from "@clerk/types";
+import { isClerkAPIResponseError, useUser } from "@clerk/clerk-expo";
 
 export default function ChangePasswordScreen() {
+  const { isLoaded, isSignedIn, user } = useUser();
+
   const [form, setForm] = useState({
     oldpassword: "",
     newpassword: "",
   });
   const [isSubmitting, setSubmitting] = useState(false);
+  const [isPasswordVisible, setPasswordVisible] = useState(false);
+  const [errors, setErrors] = useState<ClerkAPIError[]>();
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!isPasswordVisible);
+  };
 
   const handleChangePassword = async () => {
     if (form.oldpassword === "" || form.newpassword === "") {
@@ -19,45 +36,82 @@ export default function ChangePasswordScreen() {
       return;
     }
 
+    if (!isLoaded || !isSignedIn) return;
+
     setSubmitting(true);
 
     try {
-      const token = await AsyncStorage.getItem("authToken");
-
-      const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/user/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({ oldPassword: form.oldpassword, newPassword: form.newpassword }),
-      });
-
-      const contentType = response.headers.get("content-type");
-      let result;
-
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        result = await response.text();
-      }
-
-      if (response.status === 200 && result.status) {
-        Alert.alert("Success", "Password changed successfully");
-        router.push("/Profile");
-      } else if (response.status === 401) {
-        Alert.alert("Error", result.message || "Old password is incorrect");
-      } else {
-        console.log("Response Body:", result);
-        Alert.alert("Error", result.message || "Failed to change password");
-      }
-    } catch (error) {
-      console.warn("Network error:", error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+      await user
+        .updatePassword({
+          currentPassword: form.oldpassword,
+          newPassword: form.newpassword,
+        })
+        .then(() => {
+          Alert.alert("Successful", "Your password has been changed.");
+          router.back();
+        });
+    } catch (err: any) {
+      if (isClerkAPIResponseError(err)) setErrors(err.errors);
+      console.log(JSON.stringify(err, null, 2));
+      const errorMessage = err.errors
+        .map((msg: { longMessage: any }) => msg.longMessage)
+        .join("\n");
       Alert.alert("Error", errorMessage);
     } finally {
       setSubmitting(false);
     }
+
+    // try {
+    //   const token = await AsyncStorage.getItem("authToken");
+
+    //   //   if (!token) {
+    //   //     Alert.alert("Error", "You are not authorized. Please log in again.");
+    //   //     setSubmitting(false);
+    //   //     return;
+    //   //   }
+
+    //   const response = await fetch(
+    //     "https://buzztracker-backend.youkushaders-1.workers.dev/user/change-password",
+    //     {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         Accept: "application/json",
+    //         // "Authorization": `Bearer ${token}`, // Include token in headers
+    //       },
+    //       body: JSON.stringify({
+    //         oldPassword: form.oldpassword,
+    //         newPassword: form.newpassword,
+    //       }),
+    //     }
+    //   );
+
+    //   const contentType = response.headers.get("content-type");
+    //   let result;
+
+    //   if (contentType && contentType.includes("application/json")) {
+    //     result = await response.json();
+    //   } else {
+    //     result = await response.text();
+    //   }
+
+    //   if (response.status === 200 && result.status) {
+    //     Alert.alert("Success", "Password changed successfully");
+    //     router.push("/Profile");
+    //   } else if (response.status === 401) {
+    //     Alert.alert("Error", result.message || "Old password is incorrect");
+    //   } else {
+    //     console.log("Response Body:", result);
+    //     Alert.alert("Error", result.message || "Failed to change password");
+    //   }
+    // } catch (error) {
+    //   console.warn("Network error:", error);
+    //   const errorMessage =
+    //     error instanceof Error ? error.message : "An error occurred";
+    //   Alert.alert("Error", errorMessage);
+    // } finally {
+    //   setSubmitting(false);
+    // }
   };
 
   return (
