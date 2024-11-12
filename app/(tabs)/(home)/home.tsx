@@ -10,25 +10,32 @@ import {
   Alert,
 } from "react-native";
 import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUser } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 
 export default function Home() {
   const [username, setUsername] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
   const { isLoaded, isSignedIn, user } = useUser();
 
   // In case the user signs out while on the page.
-  if (!isLoaded || !isSignedIn) {
-    console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
-    router.replace("/sign-in");
-  } else {
-    console.log(`username: ${user.username}`);
-    console.log(`userId: ${user.id}`);
-    // setUsername(user.username as string);
-  }
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
+      router.replace("/sign-in");
+    } else {
+      const storeUserData = async () => {
+        await SecureStore.setItemAsync("userId", user.id);
+        setUserId(user.id);
+        await SecureStore.setItemAsync("username", user.username as string);
+        setUsername(user.username as string);
+      };
+      storeUserData();
+    }
+  }, [isLoaded, isSignedIn]);
 
   const articles = [
     {
@@ -64,16 +71,10 @@ export default function Home() {
   const [dengueStatus, setDengueStatus] = useState("Loading...");
 
   useEffect(() => {
-    const fetchUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
-    };
     const fetchDengueStatus = async () => {
       try {
         const response = await fetch(
-          "https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-status",
+          `https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-status?userId=${userId}`,
           {
             method: "GET",
             headers: {
@@ -107,7 +108,6 @@ export default function Home() {
       }
     };
 
-    fetchUsername();
     fetchDengueStatus();
   }, []);
 

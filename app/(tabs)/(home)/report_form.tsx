@@ -1,14 +1,25 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
-import { router } from 'expo-router';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Alert,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
 
 export default function Details() {
-  const [selectedSymptom, setSelectedSymptom] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
-  const [remarks, setRemarks] = useState('');
+  const [selectedSymptom, setSelectedSymptom] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [remarks, setRemarks] = useState("");
   const [symptoms, setSymptoms] = useState<string[]>([]);
-  const [locations, setLocations] = useState<{ name: string, coordinates: { latitude: number, longitude: number } }[]>([]);
+  const [locations, setLocations] = useState<
+    { name: string; coordinates: { latitude: number; longitude: number } }[]
+  >([]);
 
   const handleSymptomSelect = (symptom: string) => {
     if (symptom && !symptoms.includes(symptom)) {
@@ -17,50 +28,56 @@ export default function Details() {
   };
 
   const handleLocationSelect = (location: string) => {
-    if (location && !locations.find(loc => loc.name === location)) {
+    if (location && !locations.find((loc) => loc.name === location)) {
       // Example coordinates; these should come from your actual data source
       const coordinates = {
         latitude: Math.random() * 90, // Replace with actual latitude
-        longitude: Math.random() * 180 // Replace with actual longitude
+        longitude: Math.random() * 180, // Replace with actual longitude
       };
       setLocations([...locations, { name: location, coordinates }]);
     }
   };
 
   const handleSymptomRemove = (symptom: string) => {
-    setSymptoms(symptoms.filter(item => item !== symptom));
+    setSymptoms(symptoms.filter((item) => item !== symptom));
   };
 
   const handleLocationRemove = (location: string) => {
-    setLocations(locations.filter(item => item.name !== location));
+    setLocations(locations.filter((item) => item.name !== location));
   };
 
   const handleSubmit = async () => {
+    const userId = await SecureStore.getItemAsync("userId");
+    // console.log(userId);
     const payload = {
+      userId,
       symptoms,
       locations,
-      remarks
+      remarks,
     };
 
     try {
-      const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/create-case', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch(
+        "https://buzztracker-backend.youkushaders-1.workers.dev/dengue/create-case",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
-        Alert.alert('Success', `Case created with ID: ${result.data.caseId}`);
-        router.push('/submitted_thankyou');
+        Alert.alert("Success", `Case created with ID: ${result.data.caseId}`);
+        router.push("/submitted_thankyou");
       } else {
-        Alert.alert('Error', 'Failed to create case');
+        Alert.alert("Error", "Failed to create case");
       }
     } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', 'An error occurred while submitting the case');
+      console.error("Error:", error);
+      Alert.alert("Error", "An error occurred while submitting the case");
     }
   };
 
@@ -144,11 +161,11 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     padding: 20,
-    backgroundColor: '#ffffff',
+    backgroundColor: "#ffffff",
   },
   header: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
   },
   label: {
@@ -159,15 +176,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 10,
     marginBottom: 5,
-    color: '#555',
+    color: "#555",
   },
   chipContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 10,
   },
   chip: {
-    backgroundColor: '#7b4b52',
+    backgroundColor: "#7b4b52",
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 20,
@@ -175,35 +192,35 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   chipText: {
-    color: '#ffffff',
+    color: "#ffffff",
   },
   picker: {
     marginVertical: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
   },
   textInput: {
     height: 100,
-    borderColor: '#cccccc',
+    borderColor: "#cccccc",
     borderWidth: 1,
     borderRadius: 5,
     padding: 10,
     marginBottom: 20,
   },
   submitButton: {
-    backgroundColor: '#7b4b52',
+    backgroundColor: "#7b4b52",
     paddingVertical: 12,
     borderRadius: 30,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
   },
   submitButtonText: {
-    color: '#ffffff',
+    color: "#ffffff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
