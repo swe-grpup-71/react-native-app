@@ -41,8 +41,8 @@ export default function ProfileScreen() {
 
       {/* Options */}
       <View style={styles.optionContainer}>
-        <ProfileOption title="Edit Profile" icon="chevron-right" />
-        <ProfileOption title="Change Password" icon="chevron-right" />
+        <ProfileOption title="Change Username" icon="chevron-right" onPress={() => router.push({ pathname: "/change_username" })} />
+        <ProfileOption title="Change Password" icon="chevron-right" onPress={() => router.push({ pathname: "/change_password" })} />
         <ProfileOption
           title="Sign Out"
           icon="chevron-right"
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F4F4F8",
     alignItems: "center",
-    paddingTop: 50,
+    paddingTop: 80,
   },
   header: {
     alignItems: "center",

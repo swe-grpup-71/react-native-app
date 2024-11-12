@@ -24,6 +24,9 @@ const FormField: React.FC<Props> = ({
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
+  // Check if the current field is a password field
+  const isPasswordField = title.toLowerCase().includes("password");
+
   return (
     <View className={`space-y-2 ${otherStyles}`}>
       <Text className="text-base text-black font-medium">{title}</Text>
@@ -34,16 +37,14 @@ const FormField: React.FC<Props> = ({
           value={value}
           placeholderTextColor="#7B7B8B"
           onChangeText={handleChangeText}
-          secureTextEntry={
-            (title === "Password" || title === "New password") && !showPassword
-          }
+          secureTextEntry={isPasswordField && !showPassword} // Only secure for password fields
           {...props}
         />
 
-        {(title === "Password" || title === "New password") && (
+        {isPasswordField && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <FontAwesome6
-              name={!showPassword ? "eye" : "eye-slash"}
+              name={showPassword ? "eye-slash" : "eye"}
               size={24}
               color="black"
             />

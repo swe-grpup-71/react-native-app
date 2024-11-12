@@ -7,12 +7,12 @@ export default function ProfileNavigation() {
       <Stack>
         <Stack.Screen name="Profile" options={{headerShown: false }} />
         <Stack.Screen
-          name="edit_profile"
+          name="change_password"
           options={{
-            title: 'Edit Profile', headerShown: true
+            title: 'Change Password', headerShown: true
           }}
         />
-          <Stack.Screen name="change_password" options={{title:"Change Password", headerShown: true }} />
+          <Stack.Screen name="change_username" options={{title:"Change Username", headerShown: true }} />
           
       </Stack>
     </>

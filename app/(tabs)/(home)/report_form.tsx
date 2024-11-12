@@ -1,46 +1,111 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import { router } from 'expo-router';
 
 export default function Details() {
-  const [selectedSymptom, setSelectedSymptom] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedSymptom, setSelectedSymptom] = useState<string[]>([]);
+  const [showSymptomDropdown, setShowSymptomDropdown] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<string[]>([]);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
   const [remarks, setRemarks] = useState('');
-  const [symptoms, setSymptoms] = useState<string[]>([]);
-  const [locations, setLocations] = useState<{ name: string, coordinates: { latitude: number, longitude: number } }[]>([]);
+
+  const symptomOptions = ['Fever', 'Chills', 'Headache',"Sorethroat","Vomiting","Rash"];
+  const locationOptions = [
+    "Angklong Ln (Faber Gdn Condo) / Island Gdns Walk / Sin Ming Ave (Flame Tree Pk) / Sin Ming Walk (Bishan Pk Condo, The Gdns at Bishan) / The Inglewood",
+    "Buangkok Green, View",
+    "Science Pk Dr",
+    "Bishan St 22 (Blk 234) / Bishan St 23 (Blk 225, 229, 231) / Bishan St 24 (Blk 291) / Bishan St 25 (Clover By The Park)",
+    "Cardiff Gr (Cardiff Residence) / Golden Dr, Walk / Jln Pacheli / Li Hwan Cl, Dr, View / Tai Hwan Ter",
+    "Lentor Loop (Bullion Pk) / Lentor Lk, St, Ter",
+    "Kreta Ayer Rd (Blk 334) / Sago Ln (Blk 4) / Smith St (Blk 335B)",
+    "Tampines St 22 (Blk 295, 296, 297)",
+    "Cactus Dr (Grande Vista)",
+    "Ang Mo Kio Ave 1 (Blk 207, 217)",
+    "Jln Tenteram (Blk 16)",
+    "Lor 1 Toa Payoh (Blk 148, 149, 150, 153A, 155, 156, 157) / Lor 1 Toa Payoh (Oleander Twrs) / Lor 2 Toa Payoh (Blk 141, 142, 145, 146, 147, 152, 153, 154)",
+    "Pasir Ris Dr 10 (Blk 645, 647)",
+    "Seletar North Lk",
+    "Tuas South St 12",
+    "Eng Kong Rd, Ter / Lor Kismis / Toh Tuck Rd / Toh Tuck Rd (Daintree Residence, Nottinghill Suites, The Creek @ Bt) / Toh Tuck Ter / Toh Yi Rd",
+    "Toh Tuck Rd / Toh Tuck Rd (Signature Pk)",
+    "Tai Hwan Cres",
+    "Lor 1 Toa Payoh (Blk 158, 159, 160, 161, 163, 168, 169, 170, 171, 173, 174) / Lor 1 Toa Payoh (Trellis Twrs) / Thomson Ln (Sky@Eleven)",
+    "Lor 1 Toa Payoh (Blk 98) / Lor 2 Toa Payoh (Blk 99B, 99C, 101A, 101B) / Lor 3 Toa Payoh (Blk 91, 96, 97) / Lor 3 Toa Payoh (Trevista) / Lor 4 Toa Payoh (Blk 94)",
+    "Bt Batok West Ave 6 (Blk 450C, 451A)",
+    "Bt Batok East Ave 4 (Blk 271, 272)",
+    "Bedok North Ave 2 (Blk 514, 518)",
+    "Rivervale Cres (Blk 151, 185D)",
+    "Upp S'goon View (The Kingsford Waterbay)",
+    "Lor 1 Toa Payoh (Blk 128) / Lor 1A Toa Payoh (Blk 138A, 138B, 138C, 139A, 139B) / Lor 2 Toa Payoh (Blk 143, 144)",
+    "Choa Chu Kang Ave 3 (Mi Casa, The Rainforest)",
+    "Keng Lee Rd (Rochelle At Newton) / Newton Rd (Amaryllis Ville)",
+    "Bt Batok West Ave 6 (Blk 185, 186, 193)",
+    "Redhill Rd (Blk 71, 73A, 75B)",
+    "Old Choa Chu Kang Rd",
+    "Lor Ong Lye / S'goon Ave 1 (Blk 425) / S'goon Ter",
+    "Bt Batok St 52 (Blk 539) / Bt Batok St 52 (Guilin View)",
+    "Holland Dr (Blk 18A, 18B)",
+    "Lor 1 Toa Payoh (Blk 117, 118, 119, 123) / Lor 2 Toa Payoh (Blk 116, 120, 121, 122)",
+    "Akyab Rd (Pavilion 11) / Mandalay Rd (The Ansley) / Prome Rd",
+    "Lor 2 Toa Payoh (Blk 84) / Lor 4 Toa Payoh (Blk 80)",
+    "Lor 1 Toa Payoh (Blk 107, 111, 113, 114) / Toa Payoh North (Blk 206, 207)",
+    "Bendemeer Rd / Bendemeer Rd (Blk 32) / Mcnair Rd (Blk 113A, 113C) / Towner Rd (Blk 105) / Whampoa West (Blk 34)",
+    "S'goon Ctrl Dr (Blk 256, 258)",
+    "Ang Mo Kio Ave 2 / Thomson Green, Walk",
+    "Chancery Ln / Gentle Rd / Gilstead Rd"
+  ];
 
   const handleSymptomSelect = (symptom: string) => {
-    if (symptom && !symptoms.includes(symptom)) {
-      setSymptoms([...symptoms, symptom]);
+    if (!selectedSymptom.includes(symptom)) {
+      setSelectedSymptom([...selectedSymptom, symptom]);
+    }
+    setShowSymptomDropdown(false);
+  };
+
+  const handleSymptomRemove = (symptom: string) => {
+    setSelectedSymptom(selectedSymptom.filter(item => item !== symptom));
+  };
+
+  const handleSearchChange = (text: string) => {
+    setSearchQuery(text);
+    if (text) {
+      const filtered = locationOptions.filter(loc => loc.toLowerCase().includes(text.toLowerCase()));
+      setFilteredLocations(filtered);
+    } else {
+      setFilteredLocations([]);
     }
   };
 
   const handleLocationSelect = (location: string) => {
-    if (location && !locations.find(loc => loc.name === location)) {
-      // Example coordinates; these should come from your actual data source
-      const coordinates = {
-        latitude: Math.random() * 90, // Replace with actual latitude
-        longitude: Math.random() * 180 // Replace with actual longitude
-      };
-      setLocations([...locations, { name: location, coordinates }]);
+    if (!selectedLocation.includes(location)) {
+      setSelectedLocation([...selectedLocation, location]);
     }
-  };
-
-  const handleSymptomRemove = (symptom: string) => {
-    setSymptoms(symptoms.filter(item => item !== symptom));
+    setSearchQuery(''); // Clear the input field after selection
+    setFilteredLocations([]); // Clear the dropdown list
+    setShowLocationDropdown(false);
   };
 
   const handleLocationRemove = (location: string) => {
-    setLocations(locations.filter(item => item.name !== location));
+    setSelectedLocation(selectedLocation.filter(item => item !== location));
   };
 
   const handleSubmit = async () => {
     const payload = {
-      symptoms,
-      locations,
+      userId: '12345', // Replace this with the actual user ID, ideally fetched dynamically
+      symptoms: selectedSymptom,
+      locations: selectedLocation.map(location => ({
+        name: location,
+        coordinates: {
+          latitude: 0, // Replace with actual latitude if available
+          longitude: 0 // Replace with actual longitude if available
+        }
+      })),
       remarks
     };
+
 
     try {
       const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/create-case', {
@@ -65,68 +130,74 @@ export default function Details() {
   };
 
   return (
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Please answer the questions below</Text>
 
       <Text style={styles.label}>Pick your symptoms:</Text>
-      {symptoms.length > 0 && (
+      {selectedSymptom.length > 0 && (
         <View style={styles.chipContainer}>
-          {symptoms.map((symptom, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.chip}
-              onPress={() => handleSymptomRemove(symptom)}
-            >
+          {selectedSymptom.map((symptom, index) => (
+            <TouchableOpacity key={index} style={styles.chip} onPress={() => handleSymptomRemove(symptom)}>
               <Text style={styles.chipText}>{symptom} ✕</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
-      <Text style={styles.pickerTitle}>Select a Symptom:</Text>
-      <Picker
-        selectedValue={selectedSymptom}
-        onValueChange={(itemValue) => {
-          setSelectedSymptom(itemValue);
-          handleSymptomSelect(itemValue);
-        }}
-        style={styles.picker}
+      <TouchableOpacity
+        style={styles.dropdownTrigger}
+        onPress={() => setShowSymptomDropdown(!showSymptomDropdown)}
       >
-        <Picker.Item label="Fever" value="Fever" />
-        <Picker.Item label="Chills" value="Chills" />
-        <Picker.Item label="Headache" value="Headache" />
-      </Picker>
+        <Text style={styles.triggerText}>
+          {selectedSymptom.length > 0 ? 'Add more symptoms' : 'Select symptoms'}
+        </Text>
+      </TouchableOpacity>
+      {showSymptomDropdown && (
+        <FlatList
+          data={symptomOptions}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleSymptomSelect(item)} style={styles.listItem}>
+              <Text>{item}</Text>
+            </TouchableOpacity>
+          )}
+          style={styles.dropdownList}
+        />
+      )}
 
-      <Text style={styles.label}>Frequency Visit Locations:</Text>
-      {locations.length > 0 && (
+      <Text style={styles.label}>Frequently Visited Locations:</Text>
+      {selectedLocation.length > 0 && (
         <View style={styles.chipContainer}>
-          {locations.map((location, index) => (
-            <TouchableOpacity
-              key={index}
-              style={styles.chip}
-              onPress={() => handleLocationRemove(location.name)}
-            >
-              <Text style={styles.chipText}>{location.name} ✕</Text>
+          {selectedLocation.map((location, index) => (
+            <TouchableOpacity key={index} style={styles.chip} onPress={() => handleLocationRemove(location)}>
+              <Text style={styles.chipText}>{location} ✕</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
-      <Text style={styles.pickerTitle}>Select a Location:</Text>
-      <Picker
-        selectedValue={selectedLocation}
-        onValueChange={(itemValue) => {
-          setSelectedLocation(itemValue);
-          handleLocationSelect(itemValue);
-        }}
-        style={styles.picker}
-      >
-        <Picker.Item label="NTU" value="NTU" />
-        <Picker.Item label="NUS" value="NUS" />
-        <Picker.Item label="SMU" value="SMU" />
-      </Picker>
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Search locations..."
+        value={searchQuery}
+        onChangeText={handleSearchChange}
+        onFocus={() => setShowLocationDropdown(true)}
+      />
+      {showLocationDropdown && filteredLocations.length > 0 && (
+        <FlatList
+          data={filteredLocations}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleLocationSelect(item)} style={styles.listItem}>
+              <Text>{item}</Text>
+            </TouchableOpacity>
+          )}
+          style={styles.dropdownList}
+        />
+      )}
 
       <Text style={styles.label}>Remarks</Text>
       <TextInput
-        style={styles.textInput}
+        style={[styles.textInput, { height: 100 }]}
         multiline
         placeholder="Enter remarks here"
         value={remarks}
@@ -137,7 +208,8 @@ export default function Details() {
         <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
     </ScrollView>
-  );
+  </KeyboardAvoidingView>
+);
 }
 
 const styles = StyleSheet.create({
@@ -147,19 +219,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
   },
   header: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
+    marginBottom: 15,
+    textAlign: 'center',
   },
   label: {
     fontSize: 16,
-    marginBottom: 5,
-  },
-  pickerTitle: {
-    fontSize: 14,
+    marginBottom: 10,
     marginTop: 10,
-    marginBottom: 5,
-    color: '#555',
   },
   chipContainer: {
     flexDirection: 'row',
@@ -177,12 +245,37 @@ const styles = StyleSheet.create({
   chipText: {
     color: '#ffffff',
   },
-  picker: {
-    marginVertical: 10,
+  dropdownTrigger: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
     backgroundColor: '#f0f0f0',
   },
+  triggerText: {
+    fontSize: 16,
+  },
+  dropdownList: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    maxHeight: 150,
+    marginBottom: 10,
+  },
+  listItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  searchInput: {
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
   textInput: {
-    height: 100,
     borderColor: '#cccccc',
     borderWidth: 1,
     borderRadius: 5,

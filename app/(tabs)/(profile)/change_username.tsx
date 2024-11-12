@@ -6,16 +6,15 @@ import FormField from "@/components/FormField"; // Import the FormField componen
 import CustomButton from "@/components/CustomButton";
 import { router } from "expo-router";
 
-export default function ChangePasswordScreen() {
+export default function ChangeUsernameScreen() {
   const [form, setForm] = useState({
-    oldpassword: "",
-    newpassword: "",
+    newUsername: "",
   });
   const [isSubmitting, setSubmitting] = useState(false);
 
-  const handleChangePassword = async () => {
-    if (form.oldpassword === "" || form.newpassword === "") {
-      Alert.alert("Error", "Please fill in all fields");
+  const handleChangeUsername = async () => {
+    if (form.newUsername === "") {
+      Alert.alert("Error", "Please fill in the username field");
       return;
     }
 
@@ -24,13 +23,14 @@ export default function ChangePasswordScreen() {
     try {
       const token = await AsyncStorage.getItem("authToken");
 
-      const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/user/change-password", {
+      const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/user/change-username", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
+          // "Authorization": `Bearer ${token}`, // Include token in headers if needed
         },
-        body: JSON.stringify({ oldPassword: form.oldpassword, newPassword: form.newpassword }),
+        body: JSON.stringify({ newUsername: form.newUsername }),
       });
 
       const contentType = response.headers.get("content-type");
@@ -43,13 +43,11 @@ export default function ChangePasswordScreen() {
       }
 
       if (response.status === 200 && result.status) {
-        Alert.alert("Success", "Password changed successfully");
+        Alert.alert("Success", "Username changed successfully");
         router.push("/Profile");
-      } else if (response.status === 401) {
-        Alert.alert("Error", result.message || "Old password is incorrect");
       } else {
         console.log("Response Body:", result);
-        Alert.alert("Error", result.message || "Failed to change password");
+        Alert.alert("Error", result.message || "Failed to change username");
       }
     } catch (error) {
       console.warn("Network error:", error);
@@ -63,26 +61,17 @@ export default function ChangePasswordScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, backgroundColor: "#f5f5f5" }}>
-        <View style={{ width: "100%", flex: 1, paddingHorizontal: 16, paddingTop: 50 }}>
-          {/* Form Fields for Old and New Passwords */}
+        <View style={{ width: "100%", flex: 1, paddingHorizontal: 16, paddingTop: 100 }}>
           <FormField
-            title="Old Password"
-            value={form.oldpassword}
-            handleChangeText={(e) => setForm({ ...form, oldpassword: e })}
+            title="New Username"
+            value={form.newUsername}
+            handleChangeText={(e) => setForm({ ...form, newUsername: e })}
             otherStyles="mt-7"
           />
 
-          <FormField
-            title="New Password"
-            value={form.newpassword}
-            handleChangeText={(e) => setForm({ ...form, newpassword: e })}
-            otherStyles="mt-7"
-          />
-
-          {/* Submit Button */}
           <CustomButton
-            title="Change Password"
-            handlePress={handleChangePassword}
+            title="Change Username"
+            handlePress={handleChangeUsername}
             containerStyles="mt-7"
             isLoading={isSubmitting}
           />
