@@ -1,8 +1,9 @@
-import React, {useState, useEffect} from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { router } from 'expo-router'; // Import router for navigation
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
+import { router } from "expo-router"; // Import router for navigation
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useClerk } from "@clerk/clerk-expo";
 
 export default function ProfileScreen() {
   const [username, setUsername] = useState("");
@@ -19,6 +20,13 @@ export default function ProfileScreen() {
     loadProfileData();
   }, []);
 
+  const { signOut } = useClerk();
+
+  const handleSignOut = () => {
+    signOut();
+    // router.replace('/')
+  };
+
   const profileInitial = username ? username.charAt(0).toUpperCase() : "";
   return (
     <View style={styles.container}>
@@ -33,15 +41,19 @@ export default function ProfileScreen() {
 
       {/* Options */}
       <View style={styles.optionContainer}>
-        <ProfileOption title="Change Username" icon="chevron-right" />
-        <ProfileOption title="Change Password" icon="chevron-right" onPress={() => router.push('/(profile)/change_password')} />
-        <ProfileOption title="Sign Out" icon="chevron-right" onPress={() => router.push('/')} />
+        <ProfileOption title="Edit Profile" icon="chevron-right" />
+        <ProfileOption title="Change Password" icon="chevron-right" />
+        <ProfileOption
+          title="Sign Out"
+          icon="chevron-right"
+          onPress={handleSignOut}
+        />
       </View>
     </View>
   );
 }
 
-import { IconName } from '@fortawesome/fontawesome-common-types';
+import { IconName } from "@fortawesome/fontawesome-common-types";
 
 interface ProfileOptionProps {
   title: string;
@@ -49,7 +61,11 @@ interface ProfileOptionProps {
   onPress?: () => void;
 }
 
-const ProfileOption: React.FC<ProfileOptionProps> = ({ title, icon, onPress }) => {
+const ProfileOption: React.FC<ProfileOptionProps> = ({
+  title,
+  icon,
+  onPress,
+}) => {
   return (
     <TouchableOpacity style={styles.option} onPress={onPress}>
       <Text style={styles.optionText}>{title}</Text>
@@ -61,48 +77,48 @@ const ProfileOption: React.FC<ProfileOptionProps> = ({ title, icon, onPress }) =
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f4f8",
-    alignItems: 'center',
-    paddingTop: 80,
+    backgroundColor: "#F4F4F8",
+    alignItems: "center",
+    paddingTop: 50,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 30,
   },
   profileImageContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#C4C4C4',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#C4C4C4",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 10,
   },
   profileInitial: {
     fontSize: 40,
-    color: 'white',
-    fontWeight: 'bold',
+    color: "white",
+    fontWeight: "bold",
   },
   profileName: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   optionContainer: {
-    width: '100%',
+    width: "100%",
     paddingHorizontal: 20,
     marginTop: 10,
   },
   option: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
   },
   optionText: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
   },
 });

@@ -34,11 +34,13 @@ const FormField: React.FC<Props> = ({
           value={value}
           placeholderTextColor="#7B7B8B"
           onChangeText={handleChangeText}
-          secureTextEntry={title === "Password" && !showPassword}
+          secureTextEntry={
+            (title === "Password" || title === "New password") && !showPassword
+          }
           {...props}
         />
 
-        {title === "Password" && (
+        {(title === "Password" || title === "New password") && (
           <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
             <FontAwesome6
               name={!showPassword ? "eye" : "eye-slash"}
