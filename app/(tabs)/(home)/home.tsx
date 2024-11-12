@@ -21,9 +21,11 @@ export default function Home() {
 
   // In case the user signs out while on the page.
   if (!isLoaded || !isSignedIn) {
-    return null;
+    console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
+    router.replace("/sign-in");
   } else {
-    console.log(user.username);
+    console.log(`username: ${user.username}`);
+    console.log(`userId: ${user.id}`);
     // setUsername(user.username as string);
   }
 

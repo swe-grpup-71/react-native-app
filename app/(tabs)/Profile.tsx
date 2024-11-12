@@ -23,7 +23,7 @@ export default function ProfileScreen() {
   const { signOut } = useClerk();
 
   const handleSignOut = () => {
-    signOut().then(() => router.replace("/sign-in2"));
+    signOut();
     // router.replace('/')
   };
 

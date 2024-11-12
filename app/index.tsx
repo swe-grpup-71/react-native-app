@@ -46,7 +46,7 @@ export default function Index() {
           </View>
           <CustomButton
             title="Let's go!"
-            handlePress={() => router.replace("/sign-in2")}
+            handlePress={() => router.replace("/sign-in")}
             containerStyles="w-full mt-7"
           />
         </View>

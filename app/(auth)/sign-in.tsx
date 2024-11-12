@@ -1,142 +1,98 @@
-import CustomButton from "@/components/CustomButton";
-import FormField from "@/components/FormField";
-import { Link, router } from "expo-router";
-import React, { useState } from "react";
-import { Alert, ScrollView, View, Text } from "react-native";
+import { isClerkAPIResponseError, useSignIn } from "@clerk/clerk-expo";
+import { ClerkAPIError } from "@clerk/types";
+import { Link, useRouter } from "expo-router";
+import { Text, TextInput, Button, View, ScrollView, Alert } from "react-native";
+import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import FormField from "@/components/FormField";
+import CustomButton from "@/components/CustomButton";
 
-// Async function to handle the sign-in request
-interface SignInResponse {
-  status: boolean;
-  message?: string;
-  data?: any;
-}
+export default function Page() {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const router = useRouter();
 
-async function signin(email: string, password: string): Promise<any> {
-  try {
-    const res = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/auth/signin', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password })
+  const [emailAddress, setEmailAddress] = React.useState("");
+  const [password, setPassword] = React.useState("");
+  const [errors, setErrors] = React.useState<ClerkAPIError[]>();
 
-    });
-    
-    
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-    
-    const body: SignInResponse = await res.json();
-    await AsyncStorage.setItem('username', body.data.username);
-    if (res.status === 422) {
-      const errorDetails = await res.json();
-      console.warn("Validation errors:", errorDetails);
-      throw new Error(`Validation error: ${JSON.stringify(errorDetails)}`);
-    }
-    
-    
-    if (!body.status) {
-      throw new Error(body.message || "Login failed");
-    }
-
-    return body.data;
-    
-  } catch (err) {
-    console.warn("Network error:", err);
-    throw err; // Rethrow the error so it can be handled by the calling function
-  }
-
-}
-
-
-
-
-export default function SignIn() {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-  const [isSubmitting, setSubmitting] = useState(false);
-
-  const submit = async () => {
-    if (form.email === "" || form.password === "") {
+  const onSignInPress = React.useCallback(async () => {
+    if (emailAddress === "" || password === "") {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
-    setSubmitting(true);
+    if (!isLoaded) {
+      return;
+    }
 
     try {
-      const userData = await signin(form.email, form.password);
+      const signInAttempt = await signIn.create({
+        identifier: emailAddress,
+        password,
+      });
 
-      // If successful, show a success message
-      // Alert.alert("Success", "User signed in successfully");
-
-      // Navigate to the home screen
-      router.push("/home");
-
-      // If you need to save user data or token, do it here (e.g., AsyncStorage)
-      // await AsyncStorage.setItem("userToken", userData.token);
-
-    } catch (error) {
-      // Show the error message to the user
-      const errorMessage = error instanceof Error ? error.message : "Failed to sign in. Please try again.";
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        router.replace("/home");
+      } else {
+        // See https://clerk.com/docs/custom-flows/error-handling
+        // for more info on error handling
+        console.log(JSON.stringify(signInAttempt, null, 2));
+      }
+    } catch (err: any) {
+      if (isClerkAPIResponseError(err)) setErrors(err.errors);
+      console.log(JSON.stringify(err, null, 2));
+      const errorMessage = err.errors
+        .map((msg: { longMessage: any }) => msg.longMessage)
+        .join("\n");
       Alert.alert("Error", errorMessage);
-      console.error(error);
-    } finally {
-      setSubmitting(false);
     }
-  };
+  }, [isLoaded, emailAddress, password]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f5f5f5' }}>
-  <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, backgroundColor: '#f5f5f5' }}>
-    <View style={{ width: '100%',  flex: 1, paddingHorizontal: 16 , paddingTop:100}}>
-      <Text style={{ fontSize: 24, fontWeight: '600', color: 'black' }}>
-        Log in to BuzzTracker
-      </Text>
-      <FormField
-        title="Email"
-        value={form.email}
-        handleChangeText={(e) => setForm({ ...form, email: e })}
-        otherStyles="mt-7"
-        keyboardType="email-address"
-      />
-      <FormField
-        title="Password"
-        value={form.password}
-        otherStyles="mt-7"
-        handleChangeText={(e) => setForm({ ...form, password: e })}
-      />
-      <CustomButton
-        title="Sign In"
-        handlePress={submit}
-        containerStyles="mt-7"
-        isLoading={isSubmitting}
-      />
-      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
-        <Link
-          href="/forgot-password"
-          style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48' }}
-        >
-          Forgot password?
-        </Link>
-      </View>
-      <View style={{ flexDirection: 'row', justifyContent: 'center', paddingTop: 10 }}>
-        <Text style={{ fontSize: 16 }}>Don't have an account?</Text>
-        <Link
-          href="/sign-up"
-          style={{ fontSize: 16, fontWeight: '600', color: '#5d3d48', marginLeft: 4 }}
-        >
-          Sign up now.
-        </Link>
-      </View>
-    </View>
-  </ScrollView>
-</SafeAreaView>
+    <SafeAreaView>
+      <ScrollView>
+        <View className="w-full justify-center h-full px-4 my-6">
+          <Text className="text-2xl font-semibold text-black mt-10">
+            Log in to BuzzTracker
+          </Text>
+          <FormField
+            title="Email"
+            value={emailAddress}
+            handleChangeText={(e) => setEmailAddress(e)}
+            otherStyles="mt-7"
+            keyboardType="email-address"
+          />
+          <FormField
+            title="Password"
+            value={password}
+            otherStyles="mt-7"
+            handleChangeText={(e) => setPassword(e)}
+          />
+          <CustomButton
+            title="Sign In"
+            handlePress={onSignInPress}
+            containerStyles="mt-7"
+          />
+          <View className="flex justify-center pt-5 flex-row gap-2">
+            <Link
+              href="/forgot-password"
+              className="text-lg font-semibold text-primary"
+            >
+              Forgot password?
+            </Link>
+          </View>
+          <View className="flex justify-center pt-5 flex-row gap-2">
+            <Text className="text-lg font-regular">Don't have an account?</Text>
+            <Link
+              href="/sign-up"
+              className="text-lg font-semibold text-primary"
+            >
+              Sign up now.
+            </Link>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
