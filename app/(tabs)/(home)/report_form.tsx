@@ -131,7 +131,7 @@ export default function Details() {
   
       if (response.ok) {
         const result = await response.json();
-        Alert.alert('Success', `Case created with ID: ${result.data.caseId}`);
+        Alert.alert('Success', `Your report has been submitted.`);
         console.log('Case created:', result.data,"with userid ",userId);
   
         // If the case creation is successful, set dengue status to "positive"

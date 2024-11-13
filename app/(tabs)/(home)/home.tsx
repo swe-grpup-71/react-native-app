@@ -37,10 +37,17 @@ export default function Home() {
 
           await SecureStore.setItemAsync("username", user.username as string);
           setUsername(user.username as string);
+
+          const isFirstLogin = await SecureStore.getItemAsync("isFirstLogin");
+          if (!isFirstLogin) {
+            // Set the flag for first login
+            await SecureStore.setItemAsync("isFirstLogin", "true");
+            console.log("First login flag set.");
+          }
         };
         storeUserData();
       }
-    }, [isLoaded, isSignedIn])
+    }, [isLoaded, isSignedIn, user])
   );
 
   // useEffect that depends on userId to fetch dengue status
@@ -164,8 +171,44 @@ export default function Home() {
     };
 
     fetchDengueStatus();
-  }, []);
+  }, [userId]);
+  const reportRecovery = async () => {
+    if (!userId) {
+      Alert.alert("Error", "User ID not found. Please try again.");
+      return;
+    }
 
+    const statusPayload = {
+      userId: userId,
+      dengueStatus: "negative",
+    };
+
+    try {
+      const response = await fetch(
+        "https://buzztracker-backend.youkushaders-1.workers.dev/dengue/set-status",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(statusPayload),
+        }
+      );
+
+      if (response.ok) {
+        setDengueStatus("Negative");
+        Alert.alert("Your recovery has been reported. Take care!");
+        console.log("Dengue status set to Negative");
+      } else {
+        const errorText = await response.text();
+        console.error("Failed to set dengue status:", errorText);
+        Alert.alert("Error", `Failed to update dengue status: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Error reporting recovery:", error);
+      Alert.alert("Error", "Unable to connect to the server.");
+    }
+  };
   const statusBoxStyle = [
     styles.statusBox,
     dengueStatus === "Positive" ? styles.positiveStatus : styles.negativeStatus,
@@ -191,6 +234,14 @@ export default function Home() {
         <View style={statusBoxStyle}>
           <Text style={styles.status}>{dengueStatus}</Text>
         </View>
+        {dengueStatus === "Positive" && (
+          <TouchableOpacity
+            style={styles.recoveryButton}
+            onPress={reportRecovery}
+          >
+            <Text style={styles.recoveryButtonText}>Report Recovery</Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity style={styles.viewMoreButton}>
           <Text
             style={styles.viewMoreText}
@@ -544,5 +595,21 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  recoveryButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 50,
+    backgroundColor: "#7b4b52",
+    borderRadius: 30,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  recoveryButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
   },
 });
