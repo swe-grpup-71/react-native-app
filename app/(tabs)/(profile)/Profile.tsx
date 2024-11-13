@@ -2,22 +2,18 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 import { router } from "expo-router"; // Import router for navigation
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useClerk } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 
 export default function ProfileScreen() {
   const [username, setUsername] = useState("");
 
   useEffect(() => {
-    const loadProfileData = async () => {
-      try {
-        const storedUsername = await AsyncStorage.getItem("username");
-        if (storedUsername) setUsername(storedUsername);
-      } catch (error) {
-        console.error("Failed to load profile data:", error);
-      }
+    const fetchUsername = async () => {
+      const username = await SecureStore.getItemAsync("username");
+      setUsername(username as string);
     };
-    loadProfileData();
+    fetchUsername();
   }, []);
 
   const { signOut } = useClerk();

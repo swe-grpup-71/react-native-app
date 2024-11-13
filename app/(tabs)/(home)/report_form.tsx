@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet,Alert, FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import { router } from 'expo-router';
+import * as SecureStore from "expo-secure-store";
 
 export default function Details() {
   const [selectedSymptom, setSelectedSymptom] = useState<string[]>([]);
@@ -11,7 +11,15 @@ export default function Details() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredLocations, setFilteredLocations] = useState<string[]>([]);
   const [remarks, setRemarks] = useState('');
+  const [userId, setUserId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const userId = await SecureStore.getItemAsync("userId");
+      setUserId(userId as string);
+    };
+    fetchUserId();
+  }, []);
   const symptomOptions = ['Fever', 'Chills', 'Headache',"Sorethroat","Vomiting","Rash"];
   const locationOptions = [
     "Angklong Ln (Faber Gdn Condo) / Island Gdns Walk / Sin Ming Ave (Flame Tree Pk) / Sin Ming Walk (Bishan Pk Condo, The Gdns at Bishan) / The Inglewood",
@@ -93,8 +101,12 @@ export default function Details() {
   };
 
   const handleSubmit = async () => {
+    if (!userId || typeof userId !== 'string') {
+      Alert.alert('Error', 'User ID is missing or invalid. Please try again.');
+      return;
+    }
     const payload = {
-      userId: '12345', // Replace this with the actual user ID, ideally fetched dynamically
+      userId: userId, // Replace this with the actual user ID, ideally fetched dynamically
       symptoms: selectedSymptom,
       locations: selectedLocation.map(location => ({
         name: location,
@@ -108,6 +120,7 @@ export default function Details() {
 
 
     try {
+      // Submit the initial case creation request
       const response = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/create-case', {
         method: 'POST',
         headers: {
@@ -115,13 +128,39 @@ export default function Details() {
         },
         body: JSON.stringify(payload)
       });
-
+  
       if (response.ok) {
         const result = await response.json();
         Alert.alert('Success', `Case created with ID: ${result.data.caseId}`);
+        console.log('Case created:', result.data,"with userid ",userId);
+  
+        // If the case creation is successful, set dengue status to "positive"
+        const statusPayload = {
+          userId: userId,
+          dengueStatus: "positive"
+        };
+  
+        const statusResponse = await fetch('https://buzztracker-backend.youkushaders-1.workers.dev/dengue/set-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(statusPayload)
+        });
+  
+        if (statusResponse.ok) {
+          console.log('Dengue status set to positive');
+        } else {
+          const statusErrorResponse = await statusResponse.text();
+          console.error('Failed to set dengue status:', statusErrorResponse);
+          Alert.alert('Error', `Failed to update dengue status: ${statusErrorResponse}`);
+        }
+  
         router.push('/submitted_thankyou');
       } else {
-        Alert.alert('Error', 'Failed to create case');
+        const errorResponse = await response.text();
+        console.error('Error response:', errorResponse);
+        Alert.alert('Error', `Failed to create case: ${errorResponse}`);
       }
     } catch (error) {
       console.error('Error:', error);
@@ -131,7 +170,7 @@ export default function Details() {
 
   return (
     <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-    <ScrollView contentContainerStyle={styles.container}>
+  <View style={styles.container}>
       <Text style={styles.header}>Please answer the questions below</Text>
 
       <Text style={styles.label}>Pick your symptoms:</Text>
@@ -207,7 +246,7 @@ export default function Details() {
       <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
         <Text style={styles.submitButtonText}>Submit</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   </KeyboardAvoidingView>
 );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
+import { useFocusEffect } from "@react-navigation/native"; 
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -28,14 +29,65 @@ export default function Home() {
       router.replace("/sign-in");
     } else {
       const storeUserData = async () => {
-        await SecureStore.setItemAsync("userId", user.id);
-        setUserId(user.id);
+        const storedUserId = user.id as string;
+        await SecureStore.setItemAsync("userId", storedUserId);
+        setUserId(storedUserId); // Trigger the useEffect that depends on userId
+        console.log("Stored userId:", storedUserId);
+
         await SecureStore.setItemAsync("username", user.username as string);
         setUsername(user.username as string);
       };
       storeUserData();
     }
   }, [isLoaded, isSignedIn]);
+
+  // useEffect that depends on userId to fetch dengue status
+  useEffect(() => {
+    if (!userId) {
+      console.log("No userId yet, skipping fetch.");
+      return;
+    }
+
+    const fetchDengueStatus = async () => {
+      try {
+        const response = await fetch(
+          `https://buzztracker-backend.youkushaders-1.workers.dev/dengue/get-status?userId=${userId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+          }
+        );
+
+        const contentType = response.headers.get("content-type");
+        let result;
+
+        if (contentType && contentType.includes("application/json")) {
+          result = await response.json();
+        } else {
+          result = await response.text();
+        }
+
+        if (response.status === 200 && result.status) {
+          setDengueStatus(result.data.dengueStatus);
+          console.log("Dengue Status:", result.data.dengueStatus);
+        } else if (response.status === 401) {
+          Alert.alert("Error", "Unauthorized access. Please log in again.");
+        } else {
+          Alert.alert("Error", "Failed to fetch dengue status.");
+          setDengueStatus("Unknown");
+        }
+      } catch (error) {
+        console.warn("Network error:", error);
+        Alert.alert("Error", "Unable to connect to the server.");
+        setDengueStatus("Unknown");
+      }
+    };
+
+    fetchDengueStatus();
+  }, [userId]); // Run when userId changes
 
   const articles = [
     {
@@ -95,6 +147,7 @@ export default function Home() {
 
         if (response.status === 200 && result.status) {
           setDengueStatus(result.data.dengueStatus);
+          console.log("Dengue Status:", result.data.dengueStatus);
         } else if (response.status === 401) {
           Alert.alert("Error", "Unauthorized access. Please log in again.");
         } else {
