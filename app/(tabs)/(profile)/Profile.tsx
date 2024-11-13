@@ -8,13 +8,13 @@ import * as SecureStore from "expo-secure-store";
 export default function ProfileScreen() {
   const [username, setUsername] = useState("");
 
-  useEffect(() => {
+  useFocusEffect(() => {
     const fetchUsername = async () => {
       const username = await SecureStore.getItemAsync("username");
       setUsername(username as string);
     };
     fetchUsername();
-  }, []);
+  });
 
   const { signOut } = useClerk();
 
@@ -37,8 +37,16 @@ export default function ProfileScreen() {
 
       {/* Options */}
       <View style={styles.optionContainer}>
-        <ProfileOption title="Change Username" icon="chevron-right" onPress={() => router.push({ pathname: "/change_username" })} />
-        <ProfileOption title="Change Password" icon="chevron-right" onPress={() => router.push({ pathname: "/change_password" })} />
+        <ProfileOption
+          title="Change Username"
+          icon="chevron-right"
+          onPress={() => router.push({ pathname: "/change_username" })}
+        />
+        <ProfileOption
+          title="Change Password"
+          icon="chevron-right"
+          onPress={() => router.push({ pathname: "/change_password" })}
+        />
         <ProfileOption
           title="Sign Out"
           icon="chevron-right"
@@ -50,6 +58,7 @@ export default function ProfileScreen() {
 }
 
 import { IconName } from "@fortawesome/fontawesome-common-types";
+import { useFocusEffect } from "@react-navigation/native";
 
 interface ProfileOptionProps {
   title: string;

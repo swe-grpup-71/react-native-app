@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
-import { useFocusEffect } from "@react-navigation/native"; 
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -23,23 +23,25 @@ export default function Home() {
   const { isLoaded, isSignedIn, user } = useUser();
 
   // In case the user signs out while on the page.
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
-      router.replace("/sign-in");
-    } else {
-      const storeUserData = async () => {
-        const storedUserId = user.id as string;
-        await SecureStore.setItemAsync("userId", storedUserId);
-        setUserId(storedUserId); // Trigger the useEffect that depends on userId
-        console.log("Stored userId:", storedUserId);
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoaded || !isSignedIn) {
+        console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
+        router.replace("/sign-in");
+      } else {
+        const storeUserData = async () => {
+          const storedUserId = user.id as string;
+          await SecureStore.setItemAsync("userId", storedUserId);
+          setUserId(storedUserId); // Trigger the useEffect that depends on userId
+          console.log("Stored userId:", storedUserId);
 
-        await SecureStore.setItemAsync("username", user.username as string);
-        setUsername(user.username as string);
-      };
-      storeUserData();
-    }
-  }, [isLoaded, isSignedIn]);
+          await SecureStore.setItemAsync("username", user.username as string);
+          setUsername(user.username as string);
+        };
+        storeUserData();
+      }
+    }, [isLoaded, isSignedIn])
+  );
 
   // useEffect that depends on userId to fetch dengue status
   useEffect(() => {
