@@ -6,39 +6,92 @@ import * as SecureStore from "expo-secure-store";
 export default function Notifications() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
-
+  const [isLoading, setIsLoading] = useState(true); 
   useEffect(() => {
-    const fetchUserId = async () => {
-      const userId = await SecureStore.getItemAsync("userId");
-      console.log('Fetched userId:', userId);
-      setUserId(userId as string);
-
-      if (userId) {
+    const initializeUserId = async () => {
+      try {
+        const storedUserId = await SecureStore.getItemAsync("userId");
+        console.log('Fetched userId:', storedUserId);
+        setUserId(storedUserId);
+      } catch (error) {
+        console.error('Error fetching userId:', error);
+      } finally {
+        setIsLoading(false); // Ensure loading state is updated
+      }
+    };
+  
+    initializeUserId();
+  }, []);
+  
+  // Run this effect only if userId is not null
+  useEffect(() => {
+    if (isLoading) {
+      return; // Don't run until loading is complete
+    }
+    if (!userId) {
+      return; // Skip if userId is not yet available
+    }
+  
+    console.log("userId is available:", userId); // Add this for debugging
+  
+    const checkFirstLoginAndTriggerAPI = async () => {
+      const isFirstLogin = await SecureStore.getItemAsync("isFirstLogin");
+  
+      if (isFirstLogin === "true") {
         try {
-          const response = await fetch(`https://buzztracker-backend.youkushaders-1.workers.dev/inbox/get-messages?userId=${userId}`, {
-            method: 'GET',
+          const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/inbox/create-messages", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
+              "Content-Type": "application/json",
             },
+            body: JSON.stringify({ userId }),
           });
-          const data = await response.json();
-          // console.log('Parsed data:', data);
-          if (data.status && data.data) {
-            setNotifications(data.data);
-            // console.log('Notifications:', data.data);
+  
+          if (response.ok) {
+            console.log("API triggered for first login.");
+            // Clear the flag after the first call
+            await SecureStore.setItemAsync("isFirstLogin", "false");
           } else {
-            Alert.alert('Error', 'Failed to load notifications');
+            const errorText = await response.text();
+            console.error("API call failed:", errorText);
+            Alert.alert("Error", `Failed to create messages: ${errorText}`);
           }
         } catch (error) {
-          console.error('Error fetching notifications:', error);
-          Alert.alert('Error', 'An error occurred while fetching notifications');
+          console.error("Error during API call:", error);
+          Alert.alert("Error", "Unable to connect to the server.");
         }
       }
     };
+  
+    checkFirstLoginAndTriggerAPI();
+  }, [userId, isLoading]);
 
-    fetchUserId();
-  }, []);
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!userId) {console.log('No userId available');return;}
+
+      try {
+        const response = await fetch(`https://buzztracker-backend.youkushaders-1.workers.dev/inbox/get-messages?userId=${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        });
+        const data = await response.json();
+        if (data.status && data.data) {
+          setNotifications(data.data);
+        } else {
+          Alert.alert('Error', 'Failed to load notifications');
+        }
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        Alert.alert('Error', 'An error occurred while fetching notifications');
+      }
+    };
+
+    fetchNotifications();
+  }, [userId]);
 
   const handleDeleteNotification = (id: string) => {
     // Mark the notification as deleted in the state
@@ -52,7 +105,13 @@ export default function Notifications() {
 
     console.log(`Notification with ID: ${id} marked as deleted`);
   };
-
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
   return (
     <View style={styles.container}>
       {notifications.length > 0 ? (
@@ -69,7 +128,7 @@ export default function Notifications() {
               </View>
             ))}
         </ScrollView>
-      ) : (
+      ) : !isLoading && (
         <Text style={styles.noNotificationsText}>No notifications at the moment.</Text>
       )}
     </View>
@@ -81,6 +140,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
     padding: 20,
+  },
+  loadingText: {
+    fontSize: 20,
+    color: '#999',
   },
   notificationCard: {
     flexDirection: 'row',
