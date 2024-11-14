@@ -16,6 +16,37 @@ export default function SignUpScreen() {
   const [pendingVerification, setPendingVerification] = React.useState(false);
   const [code, setCode] = React.useState("");
 
+  const sendInboxMessages = async (userId: string | null) => {
+    if (!userId) {
+      console.log(`UserID: ${userId}. Messages not sent.`);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        "https://buzztracker-backend.youkushaders-1.workers.dev/inbox/create-messages",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        }
+      );
+
+      if (response.ok) {
+        console.log("API triggered for first login.");
+      } else {
+        const errorText = await response.text();
+        console.error("API call failed:", errorText);
+        Alert.alert("Error", `Failed to create messages: ${errorText}`);
+      }
+    } catch (error) {
+      console.error("Error during API call:", error);
+      Alert.alert("Error", "Unable to connect to the server.");
+    }
+  };
+
   const onSignUpPress = async () => {
     if (!isLoaded) {
       return;
@@ -55,6 +86,7 @@ export default function SignUpScreen() {
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
         Alert.alert("Successful", "Account has been created.");
+        sendInboxMessages(completeSignUp.createdUserId);
         router.replace("/home");
       } else {
         console.log(JSON.stringify(completeSignUp, null, 2));
