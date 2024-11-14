@@ -1,16 +1,21 @@
 import React, { useState } from "react";
 import { View, ScrollView, Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import FormField from "@/components/FormField"; // Import the FormField component
 import CustomButton from "@/components/CustomButton";
 import { router } from "expo-router";
+import { ClerkAPIError } from "@clerk/types";
+import { isClerkAPIResponseError, useUser } from "@clerk/clerk-expo";
+import * as SecureStore from "expo-secure-store";
 
 export default function ChangeUsernameScreen() {
+  const { isLoaded, isSignedIn, user } = useUser();
+
   const [form, setForm] = useState({
     newUsername: "",
   });
   const [isSubmitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<ClerkAPIError[]>();
 
   const handleChangeUsername = async () => {
     if (form.newUsername === "") {
@@ -18,40 +23,30 @@ export default function ChangeUsernameScreen() {
       return;
     }
 
+    if (!isLoaded || !isSignedIn) return;
+
+    if (form.newUsername === user.username) {
+      Alert.alert(
+        "Error",
+        "Username is same as current. Please enter a different username."
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const token = await AsyncStorage.getItem("authToken");
-
-      const response = await fetch("https://buzztracker-backend.youkushaders-1.workers.dev/user/change-username", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          // "Authorization": `Bearer ${token}`, // Include token in headers if needed
-        },
-        body: JSON.stringify({ newUsername: form.newUsername }),
+      await user.update({ username: form.newUsername }).then(async () => {
+        Alert.alert("Successful", "Your username has been changed.");
+        await SecureStore.setItemAsync("username", form.newUsername);
+        router.back();
       });
-
-      const contentType = response.headers.get("content-type");
-      let result;
-
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        result = await response.text();
-      }
-
-      if (response.status === 200 && result.status) {
-        Alert.alert("Success", "Username changed successfully");
-        router.push("/Profile");
-      } else {
-        console.log("Response Body:", result);
-        Alert.alert("Error", result.message || "Failed to change username");
-      }
-    } catch (error) {
-      console.warn("Network error:", error);
-      const errorMessage = error instanceof Error ? error.message : "An error occurred";
+    } catch (err: any) {
+      if (isClerkAPIResponseError(err)) setErrors(err.errors);
+      console.log(JSON.stringify(err, null, 2));
+      const errorMessage = err.errors
+        .map((msg: { longMessage: any }) => msg.longMessage)
+        .join("\n");
       Alert.alert("Error", errorMessage);
     } finally {
       setSubmitting(false);
@@ -60,8 +55,21 @@ export default function ChangeUsernameScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 20, backgroundColor: "#f5f5f5" }}>
-        <View style={{ width: "100%", flex: 1, paddingHorizontal: 16, paddingTop: 100 }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 20,
+          backgroundColor: "#f5f5f5",
+        }}
+      >
+        <View
+          style={{
+            width: "100%",
+            flex: 1,
+            paddingHorizontal: 16,
+            paddingTop: 100,
+          }}
+        >
           <FormField
             title="New Username"
             value={form.newUsername}

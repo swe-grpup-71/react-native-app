@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
 import { router } from "expo-router";
 import { useUser } from "@clerk/clerk-expo";
 import * as SecureStore from "expo-secure-store";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -22,30 +23,33 @@ export default function Home() {
   const { isLoaded, isSignedIn, user } = useUser();
 
   // In case the user signs out while on the page.
-  useEffect(() => {
-    if (!isLoaded || !isSignedIn) {
-      console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
-      router.replace("/sign-in");
-    } else {
-      const storeUserData = async () => {
-        const storedUserId = user.id as string;
-        await SecureStore.setItemAsync("userId", storedUserId);
-        setUserId(storedUserId); // Trigger the useEffect that depends on userId
-        console.log("Stored userId:", storedUserId);
+  useFocusEffect(
+    useCallback(() => {
+      if (!isLoaded || !isSignedIn) {
+        console.log(`isLoaded: ${isLoaded}, isSignedIn: ${isSignedIn}`);
+        router.replace("/sign-in");
+      } else {
+        const storeUserData = async () => {
+          const storedUserId = user.id as string;
+          await SecureStore.setItemAsync("userId", storedUserId);
+          setUserId(storedUserId); // Trigger the useEffect that depends on userId
+          console.log("Stored userId:", storedUserId);
 
-        await SecureStore.setItemAsync("username", user.username as string);
-        setUsername(user.username as string);
+          await SecureStore.setItemAsync("username", user.username as string);
+          setUsername(user.username as string);
 
-        const isFirstLogin = await SecureStore.getItemAsync("isFirstLogin");
-        if (!isFirstLogin) {
-          // Set the flag for first login
-          await SecureStore.setItemAsync("isFirstLogin", "true");
-          console.log("First login flag set.");
-        }
-      };
-      storeUserData();
-    }
-  }, [isLoaded, isSignedIn]);
+          const isFirstLogin = await SecureStore.getItemAsync("isFirstLogin");
+          if (!isFirstLogin) {
+            // Set the flag for first login
+            await SecureStore.setItemAsync("isFirstLogin", "true");
+            console.log("First login flag set.");
+          }
+        };
+        storeUserData();
+      }
+    }, [isLoaded, isSignedIn, user])
+  );
+
   // useEffect that depends on userId to fetch dengue status
   useEffect(() => {
     if (!userId) {
@@ -181,11 +185,11 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        'https://buzztracker-backend.youkushaders-1.workers.dev/dengue/set-status',
+        "https://buzztracker-backend.youkushaders-1.workers.dev/dengue/set-status",
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(statusPayload),
         }
@@ -209,7 +213,6 @@ export default function Home() {
     styles.statusBox,
     dengueStatus === "Positive" ? styles.positiveStatus : styles.negativeStatus,
   ];
-  
 
   return (
     <View style={styles.container}>
