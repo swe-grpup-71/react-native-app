@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import baseConfig from './app.json';
+import withMapboxGradleConfig from './withMapboxGradleConfig';
 
 export default {
   ...baseConfig,
@@ -7,12 +8,13 @@ export default {
     ...baseConfig.expo,
     plugins: [
       ...(baseConfig.expo.plugins || []),
-      // [
-      //   "@rnmapbox/maps",
-      //   {
-      //     RNMapboxMapsDownloadToken: process.env.EXPO_PUBLIC_MAPBOX_ACCESS_TOKEN,
-      //   }
-      // ]
+      withMapboxGradleConfig,
+      [
+        "@rnmapbox/maps",
+        {
+          RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOADS_TOKEN || '',
+        }
+      ],
     ],
   },
 };
