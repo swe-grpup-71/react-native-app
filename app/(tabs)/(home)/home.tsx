@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useUser } from "@clerk/clerk-expo";
+import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
+import * as SecureStore from "expo-secure-store";
+import React, { useCallback, useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  Alert,
+  Image,
   Modal,
   ScrollView,
+  StyleSheet,
+  Text,
   TouchableOpacity,
-  Image,
-  Alert,
+  View,
 } from "react-native";
-import { router } from "expo-router";
-import { useUser } from "@clerk/clerk-expo";
-import * as SecureStore from "expo-secure-store";
-import { useFocusEffect } from "@react-navigation/native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -215,104 +216,132 @@ export default function Home() {
   ];
 
   return (
-    <View style={styles.container}>
-      <View style={styles.headerWrapper}>
-        <Text style={styles.header}>BuzzTracker</Text>
-        <Image
-          source={require("../../../assets/images/icon.png")}
-          style={styles.headerImage}
-        />
-      </View>
+    <SafeAreaView>
+      <ScrollView>
+        <View style={styles.container}>
+          <View style={styles.headerWrapper}>
+            <Text style={styles.header}>BuzzTracker</Text>
+            <Image
+              source={require("../../../assets/images/icon.png")}
+              style={styles.headerImage}
+            />
+          </View>
 
-      <View style={styles.welcomeSection}>
-        <View style={styles.welcomeRow}>
-          {<Text style={styles.welcomeText}>Welcome back, {username}!</Text>}
-        </View>
+          <View style={styles.welcomeSection}>
+            <View style={styles.welcomeRow}>
+              {
+                <Text style={styles.welcomeText}>
+                  Welcome back, {username}!
+                </Text>
+              }
+            </View>
 
-        <Text style={styles.statusText}>Current Dengue Status:</Text>
+            <Text style={styles.statusText}>Current Dengue Status:</Text>
 
-        <View style={statusBoxStyle}>
-          <Text style={styles.status}>{dengueStatus}</Text>
-        </View>
-        {dengueStatus === "Positive" && (
+            <View style={statusBoxStyle}>
+              <Text style={styles.status}>{dengueStatus}</Text>
+            </View>
+
+            {dengueStatus === "Positive" && (
+              <View className="flex-row mt-1">
+                <Text className="font-semibold">Recovered? </Text>
+                <Text
+                  className="font-semibold underline"
+                  onPress={reportRecovery}
+                >
+                  Click here.
+                </Text>
+              </View>
+            )}
+
+            {/* {dengueStatus === "Positive" && (
           <TouchableOpacity
             style={styles.recoveryButton}
             onPress={reportRecovery}
           >
             <Text style={styles.recoveryButtonText}>Report Recovery</Text>
           </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.viewMoreButton}>
-          <Text
-            style={styles.viewMoreText}
-            onPress={() => router.push("/(home)/viewMore")}
-          >
-            View More
-          </Text>
-        </TouchableOpacity>
-        <Text style={styles.reportPrompt}>
-          Have dengue? Report it so we can warn others
-        </Text>
+            )} */}
 
-        <TouchableOpacity
-          style={styles.reportButton}
-          onPress={() => router.push("/(home)/report_form")}
-        >
-          <Text style={styles.reportButtonText}>Report Now</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.articleSection}>
-        <Text style={styles.header}>Explore Articles</Text>
-        <ScrollView
-          horizontal={true}
-          showsHorizontalScrollIndicator={false}
-          style={styles.scrollView}
-        >
-          {articles.map((article) => (
-            <TouchableOpacity
-              key={article.id}
-              style={styles.card}
-              onPress={() => openArticle(article)}
-            >
-              <Image source={article.image} style={styles.cardImage} />
-              <Text style={styles.cardTitle}>{article.title}</Text>
-              <TouchableOpacity
-                onPress={() => openArticle(article)}
-                style={styles.button}
+            {dengueStatus !== "Positive" && (
+              <>
+                <Text style={styles.reportPrompt}>
+                  Have dengue? Report it so we can warn others
+                </Text>
+                <TouchableOpacity
+                  style={styles.reportButton}
+                  onPress={() => router.push("/(home)/report_form")}
+                >
+                  <Text style={styles.reportButtonText}>Report Now</Text>
+                </TouchableOpacity>
+              </>
+            )}
+            <TouchableOpacity style={styles.viewMoreButton}>
+              <Text
+                style={styles.viewMoreText}
+                onPress={() => router.push("/(home)/viewMore")}
               >
-                <Text style={styles.buttonText}>View Article</Text>
-              </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {selectedArticle && (
-        <Modal
-          animationType="fade"
-          transparent={true}
-          visible={modalVisible}
-          onRequestClose={() => setModalVisible(false)}
-        >
-          <View style={styles.modalBackground}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
-              <Image source={selectedArticle.image} style={styles.modalImage} />
-              <Text style={styles.modalDescription}>
-                {selectedArticle.longdescription}
+                View Report History
               </Text>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           </View>
-        </Modal>
-      )}
-    </View>
+
+          <View style={styles.articleSection}>
+            <Text style={styles.header}>Explore Articles</Text>
+            <ScrollView
+              horizontal={true}
+              showsHorizontalScrollIndicator={false}
+              style={styles.scrollView}
+            >
+              {articles.map((article) => (
+                <TouchableOpacity
+                  key={article.id}
+                  style={styles.card}
+                  onPress={() => openArticle(article)}
+                >
+                  <Image source={article.image} style={styles.cardImage} />
+                  <Text style={styles.cardTitle}>{article.title}</Text>
+                  <TouchableOpacity
+                    onPress={() => openArticle(article)}
+                    style={styles.button}
+                  >
+                    <Text style={styles.buttonText}>View Article</Text>
+                  </TouchableOpacity>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {selectedArticle && (
+            <Modal
+              animationType="fade"
+              transparent={true}
+              visible={modalVisible}
+              onRequestClose={() => setModalVisible(false)}
+            >
+              <View style={styles.modalBackground}>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>{selectedArticle.title}</Text>
+                  <Image
+                    source={selectedArticle.image}
+                    style={styles.modalImage}
+                  />
+                  <Text style={styles.modalDescription}>
+                    {selectedArticle.longdescription}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    style={styles.closeButton}
+                  >
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
@@ -322,7 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f0f4f8",
     alignItems: "center",
     justifyContent: "flex-start",
-    paddingTop: 80,
+    // paddingTop: 80,
   },
   headerWrapper: {
     width: "100%",
@@ -363,12 +392,12 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   statusBox: {
-    width: "80%",
+    width: "70%",
     paddingVertical: 15,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 20,
+    // marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -376,7 +405,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   status: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "600",
     color: "#fff",
     textAlign: "center",
@@ -394,27 +423,28 @@ const styles = StyleSheet.create({
   viewMoreButton: {
     paddingVertical: 5,
     paddingHorizontal: 20,
-    backgroundColor: "#7b4b52",
+    backgroundColor: "#563539",
     borderRadius: 30,
     marginBottom: 20,
-    marginLeft: 170,
+    marginTop: 16,
+    // marginLeft: 170,
 
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 5 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 10,
+    // elevation: 5,
   },
   viewMoreText: {
     color: "#ffffff",
-    fontSize: 14,
+    fontSize: 12,
   },
   reportButton: {
     paddingVertical: 10,
     paddingHorizontal: 50,
     backgroundColor: "#7b4b52",
     borderRadius: 30,
-    marginBottom: 30,
+    // marginBottom: 30,
 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
@@ -424,10 +454,12 @@ const styles = StyleSheet.create({
   },
   reportButtonText: {
     color: "#ffffff",
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: "bold",
   },
   reportPrompt: {
     fontSize: 14,
+    marginTop: 10,
     marginBottom: 10,
     textAlign: "center",
   },
