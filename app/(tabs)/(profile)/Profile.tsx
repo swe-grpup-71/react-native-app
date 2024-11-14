@@ -20,7 +20,7 @@ export default function ProfileScreen() {
 
   const handleSignOut = () => {
     signOut();
-    // router.replace('/')
+    router.replace("/");
   };
 
   const profileInitial = username ? username.charAt(0).toUpperCase() : "";
