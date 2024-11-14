@@ -244,13 +244,14 @@ export default function Home() {
 
             {dengueStatus === "Positive" && (
               <View className="flex-row mt-1">
-                <Text className="font-semibold">Recovered? </Text>
+                <Text className="font-semibold">Recovered? Click </Text>
                 <Text
-                  className="font-semibold underline"
+                  className="text-[#7b4b52] font-semibold underline"
                   onPress={reportRecovery}
                 >
-                  Click here.
+                  here
                 </Text>
+                <Text className="font-semibold"> to update your status!</Text>
               </View>
             )}
 
@@ -364,6 +365,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
+    marginBottom: 8,
   },
   headerImage: {
     width: 40,
@@ -379,11 +381,13 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
+    marginBottom: 40,
   },
   welcomeText: {
-    fontSize: 18,
+    fontSize: 20,
     textAlign: "left",
     alignSelf: "flex-start",
+    fontWeight: "bold",
   },
   statusText: {
     fontSize: 16,
@@ -416,8 +420,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   negativeStatus: {
-    backgroundColor: "#4CAF50",
-    borderColor: "#388E3C",
+    backgroundColor: "#808080",
+    borderColor: "#696969",
     borderWidth: 1,
   },
   viewMoreButton: {
