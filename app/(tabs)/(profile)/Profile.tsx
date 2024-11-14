@@ -18,9 +18,10 @@ export default function ProfileScreen() {
 
   const { signOut } = useClerk();
 
-  const handleSignOut = () => {
-    signOut();
-    router.replace("/");
+  const handleSignOut = async () => {
+    await signOut().then(() => {
+      router.replace("/");
+    });
   };
 
   const profileInitial = username ? username.charAt(0).toUpperCase() : "";
